@@ -1,6 +1,26 @@
 ﻿
 const byId = id => document.getElementById(id);
 
+(async () => {
+    await window.TulipFS.init();
+
+    await window.TulipFS.create("/Desktop", "folder");
+    await window.TulipFS.create("/Recycle Bin", "folder");
+    await window.TulipFS.create("/Desktop/Projects", "folder");
+    await window.TulipFS.create(
+        "/Desktop/Projects/readme.txt",
+        "file",
+        "Welcome to Tulip OS!"
+    );
+    await window.TulipFS.create(
+        "/Desktop/Notes.txt",
+        "file",
+        "Welcome to Tulip OS!"
+    );
+
+    console.log(await window.TulipFS.list());
+})();
+
 const apps = {
     explorer: { name: "Explorer", icon: "📁" },
     paint: { name: "Paint", icon: "🎨" },
@@ -26,7 +46,6 @@ const desktopController = new DesktopController({
 });
 
 const applicationInstances = {
-    explorer: new ExplorerApp(windowManager, notifications),
     browser: new BrowserApp(windowManager, notifications),
     paint: new PaintApp(windowManager, notifications),
     calculator: new CalculatorApp(windowManager, notifications),
@@ -34,9 +53,27 @@ const applicationInstances = {
     settings: new SettingsApp(windowManager, wallpaper, desktopController)
 };
 
+window.openFileExplorer = async (path = "/") => {
+    let app = applicationInstances.explorer;
+    if (!app && window.FileExplorerApp) {
+        app = new window.FileExplorerApp(windowManager, notifications);
+        applicationInstances.explorer = app;
+    }
+    if (!app) return;
+    app.open();
+    await app.loadFolder(path);
+};
+
 launcher = {
     open(appId) {
-        const app = applicationInstances[appId];
+        let app = applicationInstances[appId];
+        if (!app && appId === "explorer") {
+            const ExplorerClass = window.FileExplorerApp;
+            if (ExplorerClass) {
+                app = new ExplorerClass(windowManager, notifications);
+                applicationInstances[appId] = app;
+            }
+        }
         if (!app) return notifications.show("Application is unavailable", "error");
         app.open();
     }
@@ -47,5 +84,6 @@ const updateClock = () => { clock.textContent = new Date().toLocaleTimeString([]
 updateClock();
 window.setInterval(updateClock, 1000);
 wallpaper.restore();
+desktopController.loadDesktop();
 
 new BootController({ screen: byId("boot-screen"), desktop: byId("desktop"), progress: byId("boot-progress"), status: byId("boot-status") }).start();

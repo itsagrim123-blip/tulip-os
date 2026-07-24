@@ -1,1 +1,11 @@
 .explorer{display:flex;flex-direction:column;height:100%}.explorer-toolbar{display:flex;flex-wrap:wrap;gap:8px;padding:12px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.05)}.explorer-toolbar button{padding:8px 14px;border:0;border-radius:10px;background:#7b61ff;cursor:pointer}.explorer-path{margin:0;padding:8px 16px;color:#aaa;font-size:13px}.explorer-files{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:18px;flex:1;overflow:auto;padding:20px}.file-item{display:flex;flex-direction:column;align-items:center;gap:8px;min-height:100px;padding:10px;border:0;border-radius:15px;background:transparent;cursor:pointer}.file-item:hover{background:rgba(255,255,255,.08);transform:translateY(-3px)}.file-icon{font-size:42px}.file-name{max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.file-menu{position:fixed;z-index:10001;display:flex;flex-direction:column;gap:4px;padding:8px;border:1px solid rgba(255,255,255,.08);border-radius:12px;background:#202030;box-shadow:0 15px 35px rgba(0,0,0,.4)}.file-menu button{padding:8px 18px;border:0;border-radius:8px;background:transparent;text-align:left;cursor:pointer}.file-menu button:hover{background:#373755}
+
+.file-explorer{display:flex;flex-direction:column;height:100%;background:linear-gradient(135deg,#171820,#23253a)}
+.file-explorer .toolbar{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid rgba(255,255,255,.08)}
+.file-explorer .toolbar button{padding:7px 10px;border:0;border-radius:8px;background:#7b61ff;color:#fff;cursor:pointer}
+.file-explorer #currentPath{font-size:13px;color:#c9c9d7}
+.file-explorer #fileGrid{display:grid;grid-template-columns:repeat(auto-fill,90px);gap:15px;padding:15px;overflow:auto}
+.file-explorer .file-item{text-align:center;cursor:pointer;user-select:none;padding:8px;border-radius:12px}
+.file-explorer .file-item:hover{background:rgba(255,255,255,.08)}
+.file-explorer .icon{font-size:48px}
+.file-explorer .name{margin-top:6px;word-break:break-word;font-size:12px;color:#f5f5f7}

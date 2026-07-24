@@ -48,7 +48,17 @@
 
 <div id="desktop" class="hidden">
 
-    <!-- Wallpaper Overlay -->
+        <div id="contextMenu" class="context-menu">
+            <div id="newFolderBtn">📁 New Folder</div>
+            <div id="newFileBtn">📄 New File</div>
+            <hr>
+            <div id="pasteBtn">📋 Paste</div>
+            <div id="refreshBtn">🔄 Refresh</div>
+            <div id="propertiesBtn">⚙ Properties</div>
+            <hr>
+            <div id="renameBtn">Rename</div>
+            <div id="deleteBtn">Delete</div>
+        </div>
 
     <div id="wallpaper-overlay"></div>
 
@@ -163,6 +173,8 @@
 </div>
 
 <script defer src="js/boot.js"></script>
+<script defer src="js/filesystem.js"></script>
+<script defer src="apps/fileExplorer.js"></script>
 <script defer src="js/notifications.js"></script>
 <script defer src="js/wallpaper.js"></script>
 <script defer src="js/lockscreen.js"></script>
