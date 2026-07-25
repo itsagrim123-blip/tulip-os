@@ -1,7 +1,7 @@
 window.TULIP_WALLPAPERS = [
-    { id: "aurora", name: "Aurora", url: "wallpapers/aurora.svg" },
-    { id: "bloom", name: "Tulip Bloom", url: "wallpapers/bloom.svg" },
-    { id: "midnight", name: "Midnight Garden", url: "wallpapers/midnight.svg" }
+    { id: "aurora", name: "Aurora", url: new URL("./wallpapers/aurora.svg", document.baseURI).href },
+    { id: "bloom", name: "Tulip Bloom", url: new URL("./wallpapers/bloom.svg", document.baseURI).href },
+    { id: "midnight", name: "Midnight Garden", url: new URL("./wallpapers/midnight.svg", document.baseURI).href }
 ];
 
 window.WallpaperController = class WallpaperController {
@@ -12,7 +12,7 @@ window.WallpaperController = class WallpaperController {
 
     restore() {
         const value = localStorage.getItem("tulip.wallpaper");
-        if (value) this.apply(value);
+        if (value) this.apply(new URL(value, document.baseURI).href);
     }
 
     choose() {
@@ -24,9 +24,10 @@ window.WallpaperController = class WallpaperController {
     }
 
     apply(url, save = false) {
-        this.desktop.style.backgroundImage = `url("${url}"), linear-gradient(135deg,#07070d,#0f1725,#14143d)`;
+        const wallpaperUrl = new URL(url, document.baseURI).href;
+        this.desktop.style.backgroundImage = `url("${wallpaperUrl}"), linear-gradient(135deg,#07070d,#0f1725,#14143d)`;
         this.desktop.style.backgroundSize = "cover";
         this.desktop.style.backgroundPosition = "center";
-        if (save) localStorage.setItem("tulip.wallpaper", url);
+        if (save) localStorage.setItem("tulip.wallpaper", wallpaperUrl);
     }
 }

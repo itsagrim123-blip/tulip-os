@@ -33,7 +33,7 @@ window.TulipStoreApp = class TulipStoreApp {
 
     async loadCatalog() {
         try {
-            const response = await fetch("data/store.json");
+            const response = await fetch(new URL("./data/store.json", document.baseURI));
             if (!response.ok) throw new Error("Catalog unavailable");
             this.catalog = await response.json();
             await this.packageManager.ensureInstalled(this.catalog.filter(app => app.installed));

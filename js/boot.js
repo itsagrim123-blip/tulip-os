@@ -140,23 +140,28 @@ window.BootController = class BootController {
         this.steps = ["Initializing Kernel...", "Loading Drivers...", "Starting Desktop...", "Checking Storage...", "Loading User Interface...", "Preparing Applications...", "Finalizing...", "Welcome to Tulip OS"];
     }
 
-    start() {
-        let step = 0;
-        const timer = window.setInterval(() => {
-            const percent = Math.min((step + 1) * 13, 100);
-            this.progress.style.width = `${percent}%`;
-            this.status.textContent = this.steps[step] || this.steps.at(-1);
-            step += 1;
-            if (step >= this.steps.length) {
-                window.clearInterval(timer);
-                window.setTimeout(() => {
-                    this.screen.classList.add("boot-complete");
-                    window.setTimeout(() => {
-                        this.screen.remove();
-                        this.desktop.classList.remove("hidden");
-                    }, 350);
-                }, 350);
-            }
-        }, 250);
+    async start(initialize) {
+        this.progress.style.width = "10%";
+        this.status.textContent = this.steps[0];
+
+        try {
+            await initialize();
+            this.progress.style.width = "85%";
+            this.status.textContent = this.steps.at(-2);
+        } catch (error) {
+            console.error("Tulip OS initialization failed", error);
+            this.progress.style.width = "85%";
+            this.status.textContent = "Starting with limited functionality...";
+        }
+
+        this.progress.style.width = "100%";
+        this.status.textContent = this.steps.at(-1);
+        window.setTimeout(() => {
+            this.screen.classList.add("boot-complete");
+            window.setTimeout(() => {
+                this.screen.remove();
+                this.desktop.classList.remove("hidden");
+            }, 350);
+        }, 350);
     }
 }
