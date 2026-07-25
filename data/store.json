@@ -1,0 +1,8 @@
+[
+  {"id":"browser","name":"Browser","version":"1.0.0","author":"Tulip","description":"Modern web browser","icon":"🌐","installed":true,"category":"Internet","permissions":["window","notifications"],"entry":"browser.js","changeLog":"Built-in browser package."},
+  {"id":"paint","name":"Paint","version":"1.0.0","author":"Tulip","description":"Create colorful sketches and save them as PNG files.","icon":"🎨","installed":true,"category":"Creativity","permissions":["window","storage"],"entry":"paint.js","changeLog":"Built-in drawing tools."},
+  {"id":"focus-notes","name":"Focus Notes","version":"1.2.0","author":"Tulip Labs","description":"A calm, focused writing space for quick ideas and checklists.","icon":"🗒️","category":"Productivity","permissions":["storage","window"],"entry":"focusNotes.js","changeLog":"Improved offline note recovery."},
+  {"id":"weather-glass","name":"Weather Glass","version":"1.1.0","author":"Tulip Labs","description":"A beautiful offline-ready weather dashboard sample.","icon":"☀️","category":"Utilities","permissions":["storage","notifications","window"],"entry":"weatherGlass.js","changeLog":"Refined glass dashboard visuals."},
+  {"id":"pixel-gallery","name":"Pixel Gallery","version":"2.0.0","author":"Tulip Studio","description":"Browse a curated collection of local pixel art.","icon":"🖼️","category":"Creativity","permissions":["filesystem","window"],"entry":"pixelGallery.js","changeLog":"New gallery layout and keyboard controls."},
+  {"id":"daily-clock","name":"Daily Clock","version":"1.0.0","author":"Tulip Labs","description":"An elegant clock and productivity companion.","icon":"🕰️","category":"Utilities","permissions":["notifications","window"],"entry":"dailyClock.js","changeLog":"Initial release."}
+]

@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tulip OS</title>
-
     <link rel="stylesheet" href="css/desktop.css">
     <link rel="stylesheet" href="css/taskbar.css">
     <link rel="stylesheet" href="css/windows.css">
@@ -14,40 +13,23 @@
     <link rel="stylesheet" href="css/calculator.css">
     <link rel="stylesheet" href="css/notepad.css">
     <link rel="stylesheet" href="css/notifications.css">
+    <link rel="stylesheet" href="css/store.css">
+    <link rel="stylesheet" href="css/settings.css">
+    <link rel="stylesheet" href="css/terminal.css">
+    <link rel="stylesheet" href="css/taskManager.css">
     <link rel="stylesheet" href="css/animations.css">
-
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
-
 <body>
-
-<!-- ================= BOOT SCREEN ================= -->
-
-<div id="boot-screen">
-
-    <div class="boot-logo">
-        🌷
+    <div id="boot-screen">
+        <div class="boot-logo">🌷</div>
+        <h1>Tulip OS</h1>
+        <p id="boot-status">Initializing System...</p>
+        <div class="boot-bar"><div id="boot-progress"></div></div>
     </div>
 
-    <h1>Tulip OS</h1>
-
-    <p id="boot-status">
-        Initializing System...
-    </p>
-
-    <div class="boot-bar">
-
-        <div id="boot-progress"></div>
-
-    </div>
-
-</div>
-
-<!-- ================= DESKTOP ================= -->
-
-<div id="desktop" class="hidden">
-
+    <main id="desktop" class="hidden">
         <div id="contextMenu" class="context-menu">
             <div id="newFolderBtn">📁 New Folder</div>
             <div id="newFileBtn">📄 New File</div>
@@ -60,134 +42,61 @@
             <div id="deleteBtn">Delete</div>
         </div>
 
-    <div id="wallpaper-overlay"></div>
+        <div id="wallpaper-overlay"></div>
+        <div id="desktop-icons"></div>
+        <div id="windows"></div>
 
-    <!-- Desktop Icons -->
-
-    <div id="desktop-icons"></div>
-
-    <!-- Windows Area -->
-
-    <div id="windows"></div>
-
-    <div id="desktopMenu" hidden>
-
-        <button type="button" data-desktop-action="wallpaper">🖼 Change Wallpaper</button>
-
-        <hr>
-
-        <button type="button" data-desktop-action="lock">🔒 Lock</button>
-
-    </div>
-
-    <!-- Start Menu -->
-
-    <div id="start-menu" class="hidden">
-
-        <div class="start-header">
-
-            <h2>🌷 Tulip OS</h2>
-
-            <p>Future starts here.</p>
-
+        <div id="desktopMenu" hidden>
+            <button type="button" data-desktop-action="wallpaper">🖼 Change Wallpaper</button>
+            <hr>
+            <button type="button" data-desktop-action="lock">🔒 Lock</button>
         </div>
 
-        <div class="start-apps">
-
-            <button class="start-app" data-app="explorer">
-
-                📁 Explorer
-
-            </button>
-
-            <button class="start-app" data-app="paint">
-
-                🎨 Paint
-
-            </button>
-
-            <button class="start-app" data-app="notepad">
-
-                📝 Notepad
-
-            </button>
-
-            <button class="start-app" data-app="calculator">
-
-                🧮 Calculator
-
-            </button>
-
-            <button class="start-app" data-app="browser">
-
-                🌐 Browser
-
-            </button>
-
-            <button class="start-app" data-app="settings">
-
-                ⚙ Settings
-
-            </button>
-
+        <div id="start-menu" class="hidden">
+            <div class="start-header">
+                <h2>🌷 Tulip OS</h2>
+                <p>Future starts here.</p>
+            </div>
+            <div class="start-apps">
+                <button type="button" class="start-app" data-app="explorer">📁 Explorer</button>
+                <button type="button" class="start-app" data-app="paint">🎨 Paint</button>
+                <button type="button" class="start-app" data-app="notepad">📝 Notepad</button>
+                <button type="button" class="start-app" data-app="calculator">🧮 Calculator</button>
+                <button type="button" class="start-app" data-app="browser">🌐 Browser</button>
+                <button type="button" class="start-app" data-app="settings">⚙️ Settings</button>
+            </div>
         </div>
 
-    </div>
-
-    <div id="lockScreen" hidden>
-
-        <div id="lockClock">00:00</div>
-
-        <button type="button" id="unlock-button">Unlock</button>
-
-    </div>
-
-    <!-- Taskbar -->
-
-    <div id="taskbar">
-
-        <div class="task-left">
-
-            <button id="start-button">
-
-                🌷
-
-            </button>
-
+        <div id="lockScreen" hidden>
+            <div id="lockClock">00:00</div>
+            <button type="button" id="unlock-button">Unlock</button>
         </div>
 
-        <div id="task-center">
+        <footer id="taskbar">
+            <div class="task-left"><button type="button" id="start-button" aria-label="Open Start menu">🌷</button></div>
+            <div id="task-center"></div>
+            <div class="task-right"><span id="clock">00:00</span></div>
+        </footer>
+    </main>
 
-        </div>
-
-        <div class="task-right">
-
-            <span id="clock">
-                00:00
-            </span>
-
-        </div>
-
-    </div>
-
-</div>
-
-<script defer src="js/boot.js"></script>
-<script defer src="js/filesystem.js"></script>
-<script defer src="apps/fileExplorer.js"></script>
-<script defer src="js/notifications.js"></script>
-<script defer src="js/wallpaper.js"></script>
-<script defer src="js/lockscreen.js"></script>
-<script defer src="js/taskbar.js"></script>
-<script defer src="js/windowManager.js"></script>
-<script defer src="js/desktop.js"></script>
-<script defer src="js/explorer.js"></script>
-<script defer src="js/browser.js"></script>
-<script defer src="js/paint.js"></script>
-<script defer src="js/calculator.js"></script>
-<script defer src="js/notepad.js"></script>
-<script defer src="js/settings.js"></script>
-<script defer src="js/main.js"></script>
-
+    <script defer src="js/boot.js"></script>
+    <script defer src="js/filesystem.js"></script>
+    <script defer src="apps/fileExplorer.js"></script>
+    <script defer src="js/notifications.js"></script>
+    <script defer src="js/wallpaper.js"></script>
+    <script defer src="js/lockscreen.js"></script>
+    <script defer src="js/taskbar.js"></script>
+    <script defer src="js/windowManager.js"></script>
+    <script defer src="js/desktop.js"></script>
+    <script defer src="js/browser.js"></script>
+    <script defer src="js/paint.js"></script>
+    <script defer src="js/calculator.js"></script>
+    <script defer src="js/notepad.js"></script>
+    <script defer src="apps/settings.js"></script>
+    <script defer src="apps/terminal.js"></script>
+    <script defer src="apps/taskManager.js"></script>
+    <script defer src="js/packageManager.js"></script>
+    <script defer src="js/tulipStore.js"></script>
+    <script defer src="js/main.js"></script>
 </body>
 </html>

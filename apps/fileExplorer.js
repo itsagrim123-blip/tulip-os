@@ -5,6 +5,9 @@
             this.notifications = notifications;
             this.currentPath = '/';
             this.entries = [];
+            this.visibleEntries = [];
+            this.selectedIndices = new Set();
+            this.lastSelectedIndex = null;
             this.record = null;
         }
 
@@ -33,12 +36,13 @@
             const grid = record.content.querySelector('#fileGrid');
 
             backButton.addEventListener('click', () => this.goBack());
+            grid.addEventListener('click', event => this.handleGridClick(event));
             grid.addEventListener('contextmenu', event => this.openExplorerContextMenu(event));
             grid.addEventListener('dblclick', async event => {
                 const item = event.target.closest('.file-item');
                 if (!item) return;
 
-                const file = this.entries.find(entry => entry.path === item.dataset.path);
+                const file = this.visibleEntries[Number(item.dataset.index)];
                 if (!file) return;
 
                 if (file.type === 'folder') {
@@ -52,18 +56,30 @@
 
         openExplorerContextMenu(event) {
             const item = event.target.closest('.file-item');
+            if (item) {
+                const index = Number(item.dataset.index);
+                if (!this.selectedIndices.has(index)) {
+                    this.selectedIndices.clear();
+                    this.selectedIndices.add(index);
+                }
+                this.lastSelectedIndex = index;
+                this.updateSelectionVisual();
+            }
+
             event.preventDefault();
-            this.selectedFile = item ? this.entries.find(entry => entry.path === item.dataset.path) : null;
             const menu = document.getElementById('contextMenu');
             if (!menu) return;
             menu.style.left = `${event.pageX}px`;
             menu.style.top = `${event.pageY}px`;
             menu.style.display = 'block';
 
+            const selectedEntries = this.getSelectedEntries();
+            const selectedCount = selectedEntries.length;
+
             const renameBtn = menu.querySelector('#renameBtn');
             const deleteBtn = menu.querySelector('#deleteBtn');
-            if (renameBtn) renameBtn.style.display = item ? 'block' : 'none';
-            if (deleteBtn) deleteBtn.style.display = item ? 'block' : 'none';
+            if (renameBtn) renameBtn.style.display = selectedCount === 1 ? 'block' : 'none';
+            if (deleteBtn) deleteBtn.style.display = selectedCount > 0 ? 'block' : 'none';
 
             menu.querySelector('#newFolderBtn').onclick = async () => {
                 menu.style.display = 'none';
@@ -82,24 +98,35 @@
             };
             menu.querySelector('#propertiesBtn').onclick = () => {
                 menu.style.display = 'none';
-                alert('Properties are not available yet.');
+                if (selectedCount === 0) {
+                    alert('No item selected.');
+                } else if (selectedCount === 1) {
+                    alert(`Selected: ${selectedEntries[0].path}`);
+                } else {
+                    alert(`Selected ${selectedCount} items.`);
+                }
             };
             menu.querySelector('#renameBtn').onclick = async () => {
-                if (!this.selectedFile) return;
-                const newName = await window.TulipPrompt('Rename', this.selectedFile.path.split('/').pop());
+                const selected = this.getSelectedEntries();
+                if (selected.length !== 1) return;
+                const selectedFile = selected[0];
+                const newName = await window.TulipPrompt('Rename', selectedFile.path.split('/').pop());
                 if (!newName) return;
-                const newPath = `${this.selectedFile.path.substring(0, this.selectedFile.path.lastIndexOf('/'))}/${newName}`.replace(/\/+/g, '/') || `/${newName}`;
-                await window.TulipFS.rename(this.selectedFile.path, newPath);
+                const newPath = `${selectedFile.path.substring(0, selectedFile.path.lastIndexOf('/'))}/${newName}`.replace(/\/+/g, '/') || `/${newName}`;
+                await window.TulipFS.rename(selectedFile.path, newPath);
                 menu.style.display = 'none';
                 await this.loadFolder(this.currentPath);
             };
             menu.querySelector('#deleteBtn').onclick = async () => {
-                if (!this.selectedFile) return;
+                const selected = this.getSelectedEntries();
+                if (!selected.length) return;
                 const action = this.currentPath === '/Recycle Bin' ? 'delete' : 'move';
-                if (action === 'move') {
-                    await window.TulipFS.move(this.selectedFile.path, `/Recycle Bin/${this.selectedFile.path.split('/').pop()}`);
-                } else {
-                    await window.TulipFS.delete(this.selectedFile.path);
+                for (const file of selected) {
+                    if (action === 'move') {
+                        await window.TulipFS.move(file.path, `/Recycle Bin/${file.path.split('/').pop()}`);
+                    } else {
+                        await window.TulipFS.delete(file.path);
+                    }
                 }
                 menu.style.display = 'none';
                 await this.loadFolder(this.currentPath);
@@ -163,6 +190,7 @@
             });
 
             this.entries = files;
+            this.clearSelection();
             this.render(folder);
         }
 
@@ -172,6 +200,65 @@
             await this.loadFolder(parent);
         }
 
+        handleGridClick(event) {
+            const item = event.target.closest('.file-item');
+            if (!item) {
+                this.clearSelection();
+                return;
+            }
+
+            const index = Number(item.dataset.index);
+            if (Number.isNaN(index)) return;
+
+            if (event.shiftKey) {
+                const anchor = this.lastSelectedIndex !== null ? this.lastSelectedIndex : index;
+                const start = Math.min(anchor, index);
+                const end = Math.max(anchor, index);
+                if (!event.ctrlKey) {
+                    this.selectedIndices.clear();
+                }
+                for (let i = start; i <= end; i += 1) {
+                    this.selectedIndices.add(i);
+                }
+                this.lastSelectedIndex = index;
+            } else if (event.ctrlKey) {
+                if (this.selectedIndices.has(index)) {
+                    this.selectedIndices.delete(index);
+                } else {
+                    this.selectedIndices.add(index);
+                }
+                this.lastSelectedIndex = index;
+            } else {
+                this.selectedIndices.clear();
+                this.selectedIndices.add(index);
+                this.lastSelectedIndex = index;
+            }
+
+            this.updateSelectionVisual();
+        }
+
+        clearSelection() {
+            this.selectedIndices.clear();
+            this.lastSelectedIndex = null;
+            this.updateSelectionVisual();
+        }
+
+        updateSelectionVisual() {
+            const grid = this.record?.content.querySelector('#fileGrid');
+            if (!grid) return;
+            grid.querySelectorAll('.file-item').forEach(item => {
+                const index = Number(item.dataset.index);
+                item.classList.toggle('selected', this.selectedIndices.has(index));
+            });
+        }
+
+        getSelectedEntries() {
+            return [...this.selectedIndices]
+                .sort((a, b) => a - b)
+                .map(index => this.visibleEntries[index])
+                .filter(Boolean);
+        }
+
         render(files) {
             const grid = this.record && this.record.content.querySelector('#fileGrid');
             const currentPath = this.record && this.record.content.querySelector('#currentPath');
@@ -179,14 +266,18 @@
 
             currentPath.textContent = this.currentPath;
             grid.innerHTML = '';
+            this.visibleEntries = files;
 
-            files.forEach(file => {
+            files.forEach((file, index) => {
                 const item = document.createElement('div');
                 item.className = 'file-item';
                 item.dataset.path = file.path;
+                item.dataset.index = index;
                 item.innerHTML = '<div class="icon">' + (file.type === 'folder' ? '📁' : '📄') + '</div><div class="name">' + file.path.split('/').pop() + '</div>';
                 grid.appendChild(item);
             });
+
+            this.updateSelectionVisual();
         }
     }
 

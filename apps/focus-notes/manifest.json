@@ -1,0 +1,7 @@
+{
+  "id": "focus-notes",
+  "name": "Focus Notes",
+  "version": "1.2.0",
+  "entry": "focusNotes.js",
+  "permissions": ["storage", "window"]
+}

@@ -1,7 +1,7 @@
-﻿const WALLPAPERS = [
-    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1920&q=80",
-    "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80",
-    "https://images.unsplash.com/photo-1493246507139-91e8fad9978e?auto=format&fit=crop&w=1920&q=80"
+window.TULIP_WALLPAPERS = [
+    { id: "aurora", name: "Aurora", url: "wallpapers/aurora.svg" },
+    { id: "bloom", name: "Tulip Bloom", url: "wallpapers/bloom.svg" },
+    { id: "midnight", name: "Midnight Garden", url: "wallpapers/midnight.svg" }
 ];
 
 window.WallpaperController = class WallpaperController {
@@ -16,17 +16,17 @@ window.WallpaperController = class WallpaperController {
     }
 
     choose() {
-        const answer = window.prompt(`Choose a wallpaper (1-${WALLPAPERS.length})`);
-        const index = Number(answer) - 1;
-        if (!Number.isInteger(index) || !WALLPAPERS[index]) return;
-        this.apply(WALLPAPERS[index]);
-        localStorage.setItem("tulip.wallpaper", WALLPAPERS[index]);
+        const answer = window.prompt(`Choose a wallpaper (1-${window.TULIP_WALLPAPERS.length})`);
+        const wallpaper = window.TULIP_WALLPAPERS[Number(answer) - 1];
+        if (!wallpaper) return;
+        this.apply(wallpaper.url, true);
         this.notifications.show("Wallpaper changed");
     }
 
-    apply(url) {
+    apply(url, save = false) {
         this.desktop.style.backgroundImage = `url("${url}"), linear-gradient(135deg,#07070d,#0f1725,#14143d)`;
         this.desktop.style.backgroundSize = "cover";
         this.desktop.style.backgroundPosition = "center";
+        if (save) localStorage.setItem("tulip.wallpaper", url);
     }
 }

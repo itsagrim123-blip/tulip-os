@@ -65,21 +65,25 @@ class TulipFS {
     }
 
     async rename(oldPath, newPath) {
-        const entry = await this.get(oldPath);
-        if (!entry) return false;
-        await this.delete(oldPath);
-        const nextEntry = { ...entry, path: newPath, originalPath: entry.originalPath || oldPath };
-        await this.create(nextEntry.path, nextEntry.type, nextEntry.content, nextEntry.position || { x: 120, y: 180 });
-        return true;
+        if (!oldPath || !newPath || oldPath === newPath) return false;
+        const entries = await this.list();
+        const affectedEntries = entries.filter(entry => entry.path === oldPath || entry.path.startsWith(`${oldPath}/`));
+        if (!affectedEntries.length || entries.some(entry => entry.path === newPath || entry.path.startsWith(`${newPath}/`))) return false;
+
+        return new Promise((resolve, reject) => {
+            const tx = this.db.transaction("files", "readwrite");
+            const store = tx.objectStore("files");
+            affectedEntries.forEach(entry => {
+                store.delete(entry.path);
+                store.put({ ...entry, path: `${newPath}${entry.path.slice(oldPath.length)}`, originalPath: entry.originalPath || oldPath });
+            });
+            tx.oncomplete = () => resolve(true);
+            tx.onerror = () => reject(new Error("Failed to rename file entry"));
+        });
     }
 
     async move(oldPath, newPath) {
-        const entry = await this.get(oldPath);
-        if (!entry) return false;
-        await this.delete(oldPath);
-        const nextEntry = { ...entry, path: newPath, originalPath: entry.originalPath || oldPath };
-        await this.create(nextEntry.path, nextEntry.type, nextEntry.content, nextEntry.position || { x: 120, y: 180 });
-        return true;
+        return this.rename(oldPath, newPath);
     }
 
     async delete(path) {

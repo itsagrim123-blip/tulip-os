@@ -66,7 +66,6 @@ window.DesktopController = class DesktopController {
 
     async loadDesktop() {
         if (!window.TulipFS?.list) return;
-        await window.TulipFS.init();
         const files = await window.TulipFS.list();
         const desktopFiles = files.filter(file => {
             const parent = file.path.substring(0, file.path.lastIndexOf("/")) || "/";
@@ -251,7 +250,7 @@ window.DesktopController = class DesktopController {
 
     startPointer(event) {
         const icon = event.target.closest(".desktop-icon");
-        if (!icon || event.button !== 0) return;
+        if (!icon || icon.classList.contains("desktop-file-icon") || event.button !== 0) return;
         this.drag = { icon, startX: event.clientX, startY: event.clientY, moved: false };
     }
 
@@ -317,7 +316,7 @@ window.DesktopController = class DesktopController {
             this.suppressClick = false;
             return;
         }
-        if (icon && !this.drag) this.onLaunch(icon.dataset.app);
+        if (icon?.dataset.app && !this.drag) this.onLaunch(icon.dataset.app);
     }
 
     showMenu(event) {

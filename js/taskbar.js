@@ -13,6 +13,7 @@
         this.runningArea.className = "taskbar-running";
         root.replaceChildren(this.pinnedArea, this.runningArea);
         this.renderPinned();
+        this.renderStartMenu();
         startButton.addEventListener("click", event => {
             event.stopPropagation();
             startMenu.classList.toggle("hidden");
@@ -37,6 +38,27 @@
             button.classList.toggle("is-minimized", Boolean(record?.minimized));
             return button;
         }));
+    }
+
+    renderStartMenu() {
+        const appList = this.startMenu.querySelector(".start-apps");
+        if (!appList) return;
+        appList.replaceChildren(...Object.entries(this.apps).map(([id, app]) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "start-app";
+            button.dataset.app = id;
+            button.textContent = `${app.icon} ${app.name}`;
+            return button;
+        }));
+    }
+
+    refreshApps() {
+        for (const id of [...this.pinned]) if (!this.apps[id]) this.pinned.delete(id);
+        localStorage.setItem("tulip.pinnedApps", JSON.stringify([...this.pinned]));
+        this.renderPinned();
+        this.renderStartMenu();
+        this.renderRunning();
     }
 
     createButton(id, kind) {
