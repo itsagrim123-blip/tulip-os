@@ -14,8 +14,8 @@
 
     const requiredModules = [
         "TulipFS", "Notifications", "WallpaperController", "LockScreen", "Taskbar", "WindowManager",
-        "DesktopController", "PackageManager", "BrowserApp", "PaintApp", "CalculatorApp", "NotepadApp",
-        "TerminalApp", "TaskManagerApp", "SettingsApp", "TulipStoreApp", "FileExplorerApp"
+        "DesktopController", "PackageManager", "TulipAppRegistry", "BrowserApp", "PaintApp", "CalculatorApp", "NotepadApp",
+        "TerminalApp", "TaskManagerApp", "SettingsApp", "TulipStoreApp", "FileExplorerApp", "MediaViewerApp"
     ];
 
     async function initializeFileSystem() {
@@ -26,6 +26,9 @@
         };
 
         await createIfMissing("/Desktop", "folder");
+        await createIfMissing("/Documents", "folder");
+        await createIfMissing("/Downloads", "folder");
+        await createIfMissing("/Pictures", "folder");
         await createIfMissing("/Recycle Bin", "folder");
         await createIfMissing("/Desktop/Projects", "folder");
         await createIfMissing("/Desktop/Projects/readme.txt", "file", "Welcome to Tulip OS!");
@@ -37,7 +40,10 @@
         if (missing.length) throw new Error(`Required system modules are unavailable: ${missing.join(", ")}`);
 
         const desktop = byId("desktop");
+        apps.archive = { name: "Archive Manager", icon: "🗜" };
         const notifications = new window.Notifications();
+        const users = new window.UserManager(notifications);
+        window.TulipFS.setActiveUser(users.getActive().username);
         const wallpaper = new window.WallpaperController(desktop, notifications);
         const lockScreen = new window.LockScreen(byId("lockScreen"), byId("unlock-button"));
         let launcher;
@@ -53,17 +59,20 @@
         const packageManager = new window.PackageManager({ apps, desktop: desktopController, taskbar, notifications });
 
         // Settings is created only after its complete service bundle exists.
-        const settingsServices = { apps, notifications, packageManager };
+        const settingsServices = { apps, notifications, packageManager, users };
         const applicationInstances = {
             browser: new window.BrowserApp(windowManager, notifications),
             paint: new window.PaintApp(windowManager, notifications),
             calculator: new window.CalculatorApp(windowManager, notifications),
             notepad: new window.NotepadApp(windowManager, notifications),
-            terminal: new window.TerminalApp(windowManager, notifications),
+            terminal: new window.TerminalApp(windowManager, notifications, users),
+            archive: new window.ArchiveManagerApp(windowManager, notifications),
             "task-manager": new window.TaskManagerApp(windowManager, notifications, apps),
+            "media-viewer": new window.MediaViewerApp(windowManager, notifications),
             settings: new window.SettingsApp(windowManager, wallpaper, desktopController, settingsServices),
             "tulip-store": new window.TulipStoreApp(windowManager, notifications, packageManager)
         };
+        window.__tulipMediaViewer = applicationInstances["media-viewer"];
 
         window.openFileExplorer = async (path = "/") => {
             let app = applicationInstances.explorer;
@@ -76,7 +85,7 @@
         };
 
         launcher = {
-            open(appId) {
+            open(appId, argument) {
                 let app = applicationInstances[appId];
                 if (!app && appId === "explorer") {
                     app = new window.FileExplorerApp(windowManager, notifications);
@@ -87,15 +96,28 @@
                     return;
                 }
                 if (!app) return notifications.show("Application is unavailable", "error");
-                app.open();
+                app.open(argument);
             }
         };
+        window.__tulipLauncher = launcher;
+        const appRegistry = new window.TulipAppRegistry({ apps, packageManager, notifications, windowManager, launcher });
+        window.__tulipAppRegistry = appRegistry;
+        window.TulipSDK = Object.freeze({ version: "1.0.0", permissions: [...window.TulipSDK.permissions], forApp: (id, argument) => appRegistry.getSDK(id, argument) });
+        window.__tulipInstaller = new window.TulipTappInstaller(packageManager, notifications);
+        settingsServices.appRegistry = appRegistry;
+        packageManager.appRegistry = appRegistry;
+        const nativeOpen = launcher.open;
+        launcher.open = (appId, argument) => {
+            if (apps[appId]?.package) return appRegistry.launch(appId, argument).catch(error => notifications.show(error.message || "Unable to launch application", "error"));
+            return nativeOpen(appId, argument);
+        };
+        window.addEventListener("tulip:userchange", async () => { await desktopController.loadDesktop(); wallpaper.restore(); });
 
         const clock = byId("clock");
         const updateClock = () => { clock.textContent = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); };
         updateClock();
         window.setInterval(updateClock, 1000);
-        wallpaper.restore();
+        await wallpaper.restore();
 
         try {
             await initializeFileSystem();
@@ -111,6 +133,7 @@
         }
         try {
             await packageManager.hydrate();
+            await appRegistry.loadInstalled();
         } catch (error) {
             console.error("Unable to load installed packages", error);
             notifications.show("Unable to load installed packages", "error");

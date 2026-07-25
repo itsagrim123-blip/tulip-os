@@ -34,6 +34,7 @@ window.PackageManager = class PackageManager {
     }
 
     validateManifest(manifest) {
+        if (window.TulipAppManifest) return window.TulipAppManifest.validate(manifest);
         if (!manifest || typeof manifest !== "object") return { valid: false, error: "Manifest is missing." };
         const required = ["id", "name", "version", "entry"];
         if (required.some(key => !String(manifest[key] || "").trim())) return { valid: false, error: "Manifest is missing required fields." };
@@ -49,9 +50,25 @@ window.PackageManager = class PackageManager {
         if (installed) return this.update(manifest);
         if (confirmPermissions && !(await confirmPermissions(manifest))) return false;
         await this.savePackage({ ...manifest, installedVersion: manifest.version, installedAt: Date.now(), pinned: false });
+        this.appRegistry?.register(manifest);
         this.registerShortcut(manifest);
         this.notifications.show(`${manifest.name} installed`);
         return true;
+    }
+
+    async installTapp(input, { confirmPermissions } = {}) {
+        let payload = input;
+        if (typeof input === "string") {
+            try { payload = JSON.parse(input.startsWith("data:") ? atob(input.split(",")[1]) : input); } catch { throw new Error("This .tapp package is corrupted or is not a readable Tulip package."); }
+        }
+        if (!payload?.manifest && payload?.["app.json"]) payload = { manifest: payload["app.json"], files: payload };
+        const manifest = typeof payload?.manifest === "string" ? JSON.parse(payload.manifest) : payload?.manifest;
+        const result = this.validateManifest(manifest);
+        if (!result.valid) throw new Error(result.error);
+        const files = payload.files || {};
+        const entry = files[manifest.entry] || manifest.code;
+        if (!entry) throw new Error("The package is missing its entry file.");
+        return this.install({ ...manifest, files, code: entry }, { confirmPermissions });
     }
 
     async installFromManifest(manifestUrl, options = {}) {
@@ -65,6 +82,7 @@ window.PackageManager = class PackageManager {
         if (!pkg) return false;
         await this.removePackage(id);
         delete this.apps[id];
+        this.appRegistry?.unregister(id);
         this.desktop.render();
         this.taskbar.refreshApps();
         this.notifications.show(`${pkg.name} uninstalled`);
@@ -76,6 +94,7 @@ window.PackageManager = class PackageManager {
         if (!installed) return this.install(manifest);
         if (this.compareVersions(manifest.version, installed.installedVersion) <= 0) return false;
         await this.savePackage({ ...installed, ...manifest, installedVersion: manifest.version, updatedAt: Date.now() });
+        this.appRegistry?.register(manifest);
         this.registerShortcut(manifest);
         this.notifications.show(`${manifest.name} updated to ${manifest.version}`);
         return true;

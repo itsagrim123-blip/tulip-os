@@ -122,8 +122,12 @@ window.DesktopController = class DesktopController {
 
         const renameBtn = menu.querySelector("#renameBtn");
         const deleteBtn = menu.querySelector("#deleteBtn");
+        const openBtn = menu.querySelector("#openBtn");
+        const openWithBtn = menu.querySelector("#openWithBtn");
         if (renameBtn) renameBtn.style.display = file ? "block" : "none";
         if (deleteBtn) deleteBtn.style.display = file ? "block" : "none";
+        if (openBtn) openBtn.style.display = "none";
+        if (openWithBtn) openWithBtn.style.display = "none";
 
         const currentPath = "/Desktop";
         menu.querySelector("#newFolderBtn").onclick = async () => {

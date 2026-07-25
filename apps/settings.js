@@ -6,6 +6,8 @@ window.SettingsApp = class SettingsApp {
         this.apps = services.apps;
         this.notifications = services.notifications;
         this.packageManager = services.packageManager;
+        this.users = services.users;
+        this.appRegistry = services.appRegistry;
         this.preferenceKey = "tulip.settings";
         this.preferences = this.loadPreferences();
         this.applyPreferences();
@@ -49,7 +51,8 @@ window.SettingsApp = class SettingsApp {
             title: "⚙ Tulip Settings",
             className: "settings-window",
             content: this.createView(),
-            onMount: current => this.bind(current)
+            onMount: current => this.bind(current),
+            onClose: current => window.removeEventListener("tulip:wallpaperchange", current.wallpaperListener)
         });
         this.record = record;
         this.refreshSystemInfo();
@@ -67,6 +70,15 @@ window.SettingsApp = class SettingsApp {
             <section class="settings-section" data-panel="notifications"><p class="settings-eyebrow">ALERTS</p><h2>Notifications</h2><div class="settings-card toggle-row"><span><h3>Enable notifications</h3><p>Show Tulip OS messages in this browser.</p></span><input type="checkbox" data-role="notifications"><i></i></label><div class="settings-card"><h3>Test notification</h3><p>Confirm that desktop messages are working.</p><button type="button" class="settings-primary" data-action="test-notification">Send test notification</button></div></section>
             <section class="settings-section" data-panel="about"><p class="settings-eyebrow">TULIP OS</p><div class="about-hero"><span>🌷</span><div><h2>Tulip OS</h2><p>Version 9.0.0</p></div></div><div class="settings-card about-details"><div><span>Developer</span><strong>Agrim</strong></div><div><span>License</span><strong>MIT License</strong></div></div><a class="settings-primary github-link" href="https://github.com/itsagrim123-blip/tulip-os" target="_blank" rel="noopener noreferrer">View on GitHub ↗</a></section>
             </main>`;
+        const nav = root.querySelector(".settings-sidebar nav");
+        const accountButton = document.createElement("button"); accountButton.type = "button"; accountButton.dataset.section = "accounts"; accountButton.textContent = "Accounts"; nav.insertBefore(accountButton, nav.lastElementChild);
+        const developerButton = document.createElement("button"); developerButton.type = "button"; developerButton.dataset.section = "developer"; developerButton.textContent = "Developer Mode"; nav.append(developerButton);
+        const panel = document.createElement("section"); panel.className = "settings-section"; panel.dataset.panel = "accounts";
+        panel.innerHTML = '<p class="settings-eyebrow">USERS</p><h2>Accounts</h2><p class="settings-intro">Manage the active Tulip OS account and its isolated home folder.</p><div class="settings-card" data-role="account-list"></div><div class="settings-card"><h3>Create account</h3><p><input data-role="new-user" placeholder="Username"> <input data-role="new-name" placeholder="Display name"> <input data-role="new-password" type="password" placeholder="Password (optional)"></p><button type="button" class="settings-primary" data-action="create-user">Create user</button><button type="button" class="settings-primary" data-action="guest-user">Guest login</button></div><div class="settings-card"><h3>Active account</h3><p data-role="active-user"></p><button type="button" class="settings-primary" data-action="lock-user">Lock session</button><button type="button" class="settings-primary" data-action="logout-user">Log out</button></div>';
+        root.querySelector(".settings-main").append(panel);
+        const developer = document.createElement("section"); developer.className = "settings-section"; developer.dataset.panel = "developer";
+        developer.innerHTML = '<p class="settings-eyebrow">APP SDK</p><h2>Developer Mode</h2><p class="settings-intro">Inspect and reload SDK applications without restarting Tulip OS.</p><label class="settings-card toggle-row"><span><h3>Enable Developer Mode</h3><p>Show application diagnostics and hot reload tools.</p></span><input type="checkbox" data-role="developer-mode"><i></i></label><div class="settings-card developer-actions"><button type="button" class="settings-primary" data-action="reload-apps">Reload applications</button><button type="button" class="settings-primary" data-action="reload-sdk">Reload SDK</button><button type="button" class="settings-primary" data-action="clear-sdk-cache">Clear cache</button><button type="button" class="settings-primary" data-action="open-console">Developer Console</button></div><div class="settings-card"><h3>Installed manifests</h3><div data-role="manifest-list"></div></div>';
+        root.querySelector(".settings-main").append(developer);
         return root;
     }
 
@@ -83,9 +95,14 @@ window.SettingsApp = class SettingsApp {
         root.addEventListener("change", event => {
             if (event.target.matches("[data-role=animations]")) this.updatePreference("animations", event.target.checked, root);
             if (event.target.matches("[data-role=notifications]")) localStorage.setItem("tulip.notifications", String(event.target.checked));
+            if (event.target.matches("[data-role=developer-mode]")) { this.appRegistry?.setDeveloperMode(event.target.checked); this.notifications.show(`Developer Mode ${event.target.checked ? "enabled" : "disabled"}`); }
         });
+        record.wallpaperListener = () => this.renderWallpapers(root);
+        window.addEventListener("tulip:wallpaperchange", record.wallpaperListener);
         this.syncControls(root);
         this.renderWallpapers(root);
+        this.renderAccounts(root);
+        this.renderDeveloper(root);
     }
 
     async handleClick(event, root) {
@@ -98,17 +115,46 @@ window.SettingsApp = class SettingsApp {
         const taskbar = event.target.closest("[data-taskbar-position]");
         if (taskbar) return this.updatePreference("taskbarPosition", taskbar.dataset.taskbarPosition, root);
         const wallpaper = event.target.closest("[data-wallpaper]");
-        if (wallpaper) { this.selectWallpaper(wallpaper.dataset.wallpaper, root); return; }
+        if (wallpaper) { await this.selectWallpaper(wallpaper.dataset.wallpaper, root); return; }
         if (event.target.closest("[data-action=test-notification]")) {
             if (localStorage.getItem("tulip.notifications") === "false") return;
             await this.notifications.requestPermission();
             this.notifications.show("Tulip OS notifications are working.");
         }
+        if (event.target.closest("[data-action=create-user]")) {
+            try { await this.users.create({ username: root.querySelector("[data-role=new-user]").value, displayName: root.querySelector("[data-role=new-name]").value, password: root.querySelector("[data-role=new-password]").value }); this.renderAccounts(root); } catch (error) { this.notifications.show(error.message, "error"); }
+        }
+        if (event.target.closest("[data-action=guest-user]")) { await this.users.guest(); this.renderAccounts(root); }
+        if (event.target.closest("[data-action=lock-user]")) this.users.lock();
+        if (event.target.closest("[data-action=logout-user]")) { await this.users.logout(); this.renderAccounts(root); }
+        if (event.target.closest("[data-action=reload-apps]")) { await this.appRegistry?.reloadAll(); this.notifications.show("Applications reloaded"); }
+        if (event.target.closest("[data-action=reload-sdk]")) { this.appRegistry?.log("sdk-reloaded"); this.notifications.show("SDK reloaded"); }
+        if (event.target.closest("[data-action=clear-sdk-cache]")) { this.appRegistry?.clearLogs(); this.notifications.show("SDK cache cleared"); this.renderDeveloper(root); }
+        if (event.target.closest("[data-action=open-console]")) this.openDeveloperConsole();
+        const resetPermissions = event.target.closest("[data-reset-permissions]");
+        if (resetPermissions) { this.appRegistry?.permissions.revokeApp(resetPermissions.dataset.resetPermissions); this.notifications.show("App permissions reset"); this.renderDeveloper(root); }
+        const switchUser = event.target.closest("[data-user-switch]");
+        if (switchUser) { try { const target = this.users.list().find(user => user.username === switchUser.dataset.userSwitch); const password = target?.password ? prompt(`Password for ${target.displayName}:`) : ""; await this.users.switch(switchUser.dataset.userSwitch, password || ""); this.renderAccounts(root); } catch (error) { this.notifications.show(error.message, "error"); } }
     }
 
     updatePreference(key, value, root) {
         this.preferences[key] = value;
         this.savePreferences(); this.applyPreferences(); this.syncControls(root);
+    }
+
+    renderDeveloper(root) {
+        const toggle = root.querySelector("[data-role=developer-mode]"); if (toggle) toggle.checked = Boolean(this.appRegistry?.isDeveloperMode());
+        const list = root.querySelector("[data-role=manifest-list]"); if (!list) return;
+        list.replaceChildren(...(this.appRegistry?.getInstalled() || []).map(app => { const item = document.createElement("p"); const states = (app.permissions || []).map(permission => `${permission}: ${this.appRegistry.permissions.get(app.id, permission)}`).join(", ") || "no permissions"; item.innerHTML = `<strong>${app.id}</strong> · ${app.version} · ${states} <button type="button" class="settings-primary" data-reset-permissions="${app.id}">Reset</button>`; return item; }));
+    }
+
+    openDeveloperConsole() {
+        const registry = this.appRegistry; if (!registry) return;
+        const content = document.createElement("div"); content.className = "developer-console";
+        content.innerHTML = '<div class="console-toolbar"><input placeholder="Search logs" data-role="console-search"><button data-action="clear-console">Clear logs</button></div><pre data-role="console-output"></pre>';
+        const render = () => { content.querySelector("[data-role=console-output]").textContent = registry.getLogs(content.querySelector("[data-role=console-search]").value).map(log => `[${log.time}] ${log.event} ${log.appId} ${log.detail}`).join("\n") || "No SDK logs."; };
+        content.addEventListener("input", render); content.addEventListener("click", event => { if (event.target.closest("[data-action=clear-console]")) { registry.clearLogs(); render(); } }); render();
+        this.windowManager.create({ appId: "developer-console", title: "Developer Console", className: "developer-console-window", content });
     }
 
     showSection(section, root) {
@@ -129,19 +175,26 @@ window.SettingsApp = class SettingsApp {
     }
 
     renderWallpapers(root) {
-        const selected = localStorage.getItem("tulip.wallpaper") || "";
+        const selected = this.wallpaper.getSavedWallpaper().id;
         root.querySelector("[data-role=wallpapers]").replaceChildren(...window.TULIP_WALLPAPERS.map(wallpaper => {
             const button = document.createElement("button");
             button.type = "button"; button.className = "wallpaper-option"; button.dataset.wallpaper = wallpaper.url;
-            button.classList.toggle("selected", wallpaper.url === selected);
+            button.classList.toggle("selected", wallpaper.id === selected);
             button.innerHTML = `<img alt="${wallpaper.name} wallpaper" src="${wallpaper.url}"><span>${wallpaper.name}</span>`;
             return button;
         }));
     }
 
-    selectWallpaper(url, root) {
+    renderAccounts(root) {
+        if (!this.users) return;
+        const list = root.querySelector("[data-role=account-list]"); const active = root.querySelector("[data-role=active-user]"); if (!list || !active) return;
+        const current = this.users.getActive(); active.textContent = `${current.avatar} ${current.displayName} (${current.role}) · /home/${current.username}`;
+        list.replaceChildren(...this.users.list().map(user => { const button = document.createElement("button"); button.type = "button"; button.className = "settings-primary"; button.dataset.userSwitch = user.username; button.textContent = `${user.avatar} ${user.displayName}${user.username === current.username ? " (active)" : ""}`; return button; }));
+    }
+
+    async selectWallpaper(url, root) {
         if (!url) return;
-        this.wallpaper.apply(url, true);
+        await this.wallpaper.apply(url, true);
         this.renderWallpapers(root);
     }
 
