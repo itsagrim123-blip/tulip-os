@@ -6,7 +6,7 @@
         this.apps = apps;
         this.onLaunch = onLaunch;
         this.records = new Map();
-        this.pinned = new Set(JSON.parse(localStorage.getItem("tulip.pinnedApps") || "[\"explorer\",\"browser\"]"));
+        try { this.pinned = new Set(JSON.parse(localStorage.getItem("tulip.pinnedApps") || "[\"explorer\",\"browser\"]")); } catch { this.pinned = new Set(["explorer", "browser"]); }
         this.pinnedArea = document.createElement("div");
         this.pinnedArea.className = "taskbar-pinned";
         this.runningArea = document.createElement("div");
@@ -55,7 +55,7 @@
 
     refreshApps() {
         for (const id of [...this.pinned]) if (!this.apps[id]) this.pinned.delete(id);
-        localStorage.setItem("tulip.pinnedApps", JSON.stringify([...this.pinned]));
+        try { localStorage.setItem("tulip.pinnedApps", JSON.stringify([...this.pinned])); } catch { /* Pinning remains available for this session. */ }
         this.renderPinned();
         this.renderStartMenu();
         this.renderRunning();

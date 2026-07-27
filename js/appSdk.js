@@ -22,7 +22,7 @@
     class PermissionManager {
         constructor(notifications) { this.notifications = notifications; this.decisions = this.read(); }
         read() { try { return JSON.parse(localStorage.getItem(PERMISSION_KEY) || "{}"); } catch { return {}; } }
-        save() { localStorage.setItem(PERMISSION_KEY, JSON.stringify(this.decisions)); }
+        save() { try { localStorage.setItem(PERMISSION_KEY, JSON.stringify(this.decisions)); } catch { /* Permissions remain valid for the active session. */ } }
         get(appId, permission) { return this.decisions[appId]?.[permission] || "prompt"; }
         list(appId) { return { ...(this.decisions[appId] || {}) }; }
         set(appId, permission, decision) { this.decisions[appId] ||= {}; this.decisions[appId][permission] = decision; this.save(); window.dispatchEvent(new CustomEvent("tulip:permissionchange", { detail: { appId, permission, decision } })); }
@@ -48,7 +48,7 @@
             this.loaded = new Map(); this.logs = this.readLogs(); this.permissions = new PermissionManager(notifications);
         }
         readLogs() { try { return JSON.parse(localStorage.getItem(LOG_KEY) || "[]"); } catch { return []; } }
-        log(event, appId = "system", detail = "") { this.logs.push({ time: new Date().toISOString(), event, appId, detail }); if (this.logs.length > 500) this.logs.splice(0, this.logs.length - 500); localStorage.setItem(LOG_KEY, JSON.stringify(this.logs)); window.dispatchEvent(new CustomEvent("tulip:sdkevent", { detail: { event, appId, detail } })); }
+        log(event, appId = "system", detail = "") { this.logs.push({ time: new Date().toISOString(), event, appId, detail }); if (this.logs.length > 500) this.logs.splice(0, this.logs.length - 500); try { localStorage.setItem(LOG_KEY, JSON.stringify(this.logs)); } catch { /* Diagnostics are retained in memory. */ } window.dispatchEvent(new CustomEvent("tulip:sdkevent", { detail: { event, appId, detail } })); }
         getLogs(search = "") { const term = String(search).toLowerCase(); return this.logs.filter(item => !term || JSON.stringify(item).toLowerCase().includes(term)); }
         clearLogs() { this.logs = []; localStorage.removeItem(LOG_KEY); }
         async loadInstalled() { const packages = await this.packageManager.getInstalledList(); const executable = packages.filter(pkg => this.isExecutable(pkg)); for (const pkg of executable) { try { this.register(pkg); } catch (error) { this.log("registration-skipped", pkg.id, error.message); } } return executable; }

@@ -149,7 +149,7 @@ window.BootController = class BootController {
             this.progress.style.width = "85%";
             this.status.textContent = this.steps.at(-2);
         } catch (error) {
-            console.error("Tulip OS initialization failed", error);
+            window.dispatchEvent(new CustomEvent("tulip:booterror", { detail: { message: error?.message || "Initialization failed" } }));
             this.progress.style.width = "85%";
             this.status.textContent = "Starting with limited functionality...";
         }

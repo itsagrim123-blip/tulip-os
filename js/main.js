@@ -1,4 +1,13 @@
 (() => {
+    window.addEventListener("unhandledrejection", event => {
+        event.preventDefault();
+        window.dispatchEvent(new CustomEvent("tulip:runtimeerror", { detail: { message: event.reason?.message || "A background task failed" } }));
+    });
+    window.addEventListener("error", event => {
+        if (!event.error) return;
+        event.preventDefault();
+        window.dispatchEvent(new CustomEvent("tulip:runtimeerror", { detail: { message: event.error.message || "An application error occurred" } }));
+    });
     const byId = id => document.getElementById(id);
     const apps = {
         explorer: { name: "Explorer", icon: "📁" },
@@ -34,6 +43,8 @@
         await createIfMissing("/Documents", "folder");
         await createIfMissing("/Downloads", "folder");
         await createIfMissing("/Pictures", "folder");
+        await createIfMissing("/Pictures/Camera", "folder");
+        await createIfMissing("/AppData", "folder");
         await createIfMissing("/Recycle Bin", "folder");
         await createIfMissing("/Desktop/Projects", "folder");
         await createIfMissing("/Desktop/Projects/readme.txt", "file", "Welcome to Tulip OS!");
@@ -155,20 +166,17 @@
         try {
             await initializeFileSystem();
         } catch (error) {
-            console.error("Unable to initialize TulipFS", error);
             notifications.show("Unable to initialize the filesystem", "error");
         }
         try {
             await desktopController.loadDesktop();
         } catch (error) {
-            console.error("Unable to load desktop files", error);
             notifications.show("Unable to load desktop files", "error");
         }
         try {
             await packageManager.hydrate();
             await appRegistry.loadInstalled();
         } catch (error) {
-            console.error("Unable to load installed packages", error);
             notifications.show("Unable to load installed packages", "error");
         }
     }

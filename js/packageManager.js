@@ -5,6 +5,7 @@ window.PackageManager = class PackageManager {
         this.taskbar = taskbar;
         this.notifications = notifications;
         this.db = null;
+        this.memoryPackages = new Map();
         this.ready = this.openDatabase();
     }
 
@@ -15,13 +16,15 @@ window.PackageManager = class PackageManager {
                 const db = event.target.result;
                 if (!db.objectStoreNames.contains("packages")) db.createObjectStore("packages", { keyPath: "id" });
             };
-            request.onsuccess = event => { this.db = event.target.result; resolve(); };
-            request.onerror = () => reject(new Error("Unable to open package registry"));
+            request.onsuccess = event => { this.db = event.target.result; this.db.onversionchange = () => this.db?.close(); resolve(); };
+            request.onblocked = () => { this.db = null; resolve(); };
+            request.onerror = () => { this.db = null; resolve(); };
         });
     }
 
     async getInstalledList() {
         await this.ready;
+        if (!this.db) return [...this.memoryPackages.values()];
         return new Promise((resolve, reject) => {
             const request = this.db.transaction("packages").objectStore("packages").getAll();
             request.onsuccess = () => resolve(request.result);
@@ -155,6 +158,10 @@ window.PackageManager = class PackageManager {
     }
 
     write(action, value) {
+        if (!this.db) {
+            if (action === "put") this.memoryPackages.set(value.id, { ...value }); else this.memoryPackages.delete(value);
+            return Promise.resolve();
+        }
         return new Promise((resolve, reject) => {
             const tx = this.db.transaction("packages", "readwrite");
             tx.objectStore("packages")[action](value);
