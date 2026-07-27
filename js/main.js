@@ -9,11 +9,13 @@
         settings: { name: "Settings", icon: "⚙️" },
         terminal: { name: "Terminal", icon: "⌘" },
         "task-manager": { name: "Task Manager", icon: "▦" },
-        "tulip-store": { name: "Tulip Store", icon: "🛍️" }
+        "tulip-store": { name: "Tulip Store", icon: "🛍️" },
+        weather: { name: "Weather", icon: "☀️" },
+        "flappy-bird": { name: "Flappy Tulip", icon: "🐦" }
     };
 
     const requiredModules = [
-        "TulipFS", "Notifications", "WallpaperController", "LockScreen", "Taskbar", "WindowManager",
+        "TulipFS", "Notifications", "WallpaperController", "WeatherService", "WeatherApp", "SoundManager", "FlappyBirdApp", "LockScreen", "Taskbar", "WindowManager",
         "DesktopController", "PackageManager", "TulipAppRegistry", "BrowserApp", "PaintApp", "CalculatorApp", "NotepadApp",
         "TerminalApp", "TaskManagerApp", "SettingsApp", "TulipStoreApp", "FileExplorerApp", "MediaViewerApp"
     ];
@@ -40,11 +42,22 @@
         if (missing.length) throw new Error(`Required system modules are unavailable: ${missing.join(", ")}`);
 
         const desktop = byId("desktop");
+        const kernel = window.__tulipKernel;
+        window.__tulipProcesses = new window.TulipProcessManager(kernel.eventBus);
+        window.__tulipServices = new window.TulipServiceManager(kernel.eventBus);
+        window.__tulipClipboard = new window.TulipClipboardManager(kernel.eventBus);
+        window.__tulipPower = new window.TulipPowerManager(kernel.eventBus);
+        window.__tulipDiagnostics = new window.TulipDiagnostics(kernel.eventBus);
         apps.archive = { name: "Archive Manager", icon: "🗜" };
         const notifications = new window.Notifications();
+        const sounds = new window.SoundManager();
+        window.__tulipSounds = sounds;
+        document.addEventListener("pointerdown", () => sounds.unlock().catch(() => {}), { once: true, passive: true });
         const users = new window.UserManager(notifications);
         window.TulipFS.setActiveUser(users.getActive().username);
         const wallpaper = new window.WallpaperController(desktop, notifications);
+        const weatherService = new window.WeatherService();
+        weatherService.start();
         const lockScreen = new window.LockScreen(byId("lockScreen"), byId("unlock-button"));
         let launcher;
         const taskbar = new window.Taskbar({
@@ -70,7 +83,9 @@
             "task-manager": new window.TaskManagerApp(windowManager, notifications, apps),
             "media-viewer": new window.MediaViewerApp(windowManager, notifications),
             settings: new window.SettingsApp(windowManager, wallpaper, desktopController, settingsServices),
-            "tulip-store": new window.TulipStoreApp(windowManager, notifications, packageManager)
+            "tulip-store": new window.TulipStoreApp(windowManager, notifications, packageManager),
+            weather: new window.WeatherApp(windowManager, notifications, weatherService),
+            "flappy-bird": new window.FlappyBirdApp(windowManager, notifications, sounds)
         };
         window.__tulipMediaViewer = applicationInstances["media-viewer"];
 
@@ -100,6 +115,18 @@
             }
         };
         window.__tulipLauncher = launcher;
+        [byId("desktop-weather"), byId("taskbar-weather")].filter(Boolean).forEach(widget => widget.addEventListener("click", () => launcher.open("weather")));
+        window.addEventListener("tulip:weatherchange", event => {
+            const current = event.detail?.payload?.current; if (!current) return;
+            const [icon] = window.TulipWeatherCode(current.weather_code);
+            document.querySelectorAll("[data-weather-icon]").forEach(node => node.textContent = icon);
+            document.querySelectorAll("[data-weather-temp]").forEach(node => node.textContent = `${Math.round(current.temperature_2m)}°`);
+            document.querySelectorAll("[data-weather-place]").forEach(node => node.textContent = event.detail.place?.name || "Weather");
+        });
+        window.addEventListener("tulip:windowchange", event => {
+            if (event.detail.action === "opened") sounds.play("window-open");
+            if (event.detail.action === "closed") sounds.play("window-close");
+        });
         const appRegistry = new window.TulipAppRegistry({ apps, packageManager, notifications, windowManager, launcher });
         window.__tulipAppRegistry = appRegistry;
         window.TulipSDK = Object.freeze({ version: "1.0.0", permissions: [...window.TulipSDK.permissions], forApp: (id, argument) => appRegistry.getSDK(id, argument) });

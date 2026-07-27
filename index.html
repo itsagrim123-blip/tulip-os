@@ -20,6 +20,8 @@
     <link rel="stylesheet" href="css/imageViewer.css">
     <link rel="stylesheet" href="css/archive.css">
     <link rel="stylesheet" href="css/animations.css">
+    <link rel="stylesheet" href="css/weather.css">
+    <link rel="stylesheet" href="css/flappy.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
@@ -46,8 +48,10 @@
             <div id="deleteBtn">Delete</div>
         </div>
 
+        <div id="wallpaper-layer" aria-hidden="true"></div>
         <div id="wallpaper-overlay"></div>
         <div id="desktop-icons"></div>
+        <button type="button" id="desktop-weather" class="weather-widget" aria-label="Open Weather"><span data-weather-icon>☀️</span><span><strong data-weather-temp>--°</strong><small data-weather-place>Weather</small></span></button>
         <div id="windows"></div>
 
         <div id="desktopMenu" hidden>
@@ -79,7 +83,7 @@
         <footer id="taskbar">
             <div class="task-left"><button type="button" id="start-button" aria-label="Open Start menu">🌷</button></div>
             <div id="task-center"></div>
-            <div class="task-right"><span id="clock">00:00</span></div>
+            <div class="task-right"><button type="button" id="taskbar-weather" class="taskbar-weather" aria-label="Open Weather"><span data-weather-icon>☀️</span><span data-weather-temp>--°</span></button><span id="clock">00:00</span></div>
         </footer>
     </main>
 
@@ -89,9 +93,12 @@
     <script defer src="apps/imageViewer.js"></script>
     <script defer src="apps/fileExplorer.js"></script>
     <script defer src="js/notifications.js"></script>
+    <script defer src="js/soundManager.js"></script>
     <script defer src="js/wallpaper.js"></script>
+    <script defer src="js/weather.js"></script>
     <script defer src="js/lockscreen.js"></script>
     <script defer src="js/taskbar.js"></script>
+    <script defer src="js/systemServices.js"></script>
     <script defer src="js/windowManager.js"></script>
     <script defer src="js/desktop.js"></script>
     <script defer src="js/browser.js"></script>
@@ -102,6 +109,7 @@
     <script defer src="apps/terminal.js"></script>
     <script defer src="apps/archiveManager.js"></script>
     <script defer src="apps/taskManager.js"></script>
+    <script defer src="apps/flappyBird.js"></script>
     <script defer src="js/packageManager.js"></script>
     <script defer src="js/appSdk.js"></script>
     <script defer src="js/tulipStore.js"></script>

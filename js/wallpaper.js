@@ -7,6 +7,8 @@ window.TULIP_WALLPAPERS = [
 window.WallpaperController = class WallpaperController {
     constructor(desktop, notifications) {
         this.desktop = desktop;
+        this.layer = document.getElementById("wallpaper-layer");
+        this.imageCache = new Map();
         this.notifications = notifications;
         this.storageKey = "tulip.wallpaper";
         this.defaultWallpaper = window.TULIP_WALLPAPERS[0];
@@ -74,15 +76,25 @@ window.WallpaperController = class WallpaperController {
     }
 
     loadImage(url) {
-        return new Promise(resolve => {
+        if (this.imageCache.has(url)) return this.imageCache.get(url);
+        const request = new Promise(resolve => {
             const image = new Image();
+            image.decoding = "async";
             image.onload = () => resolve(true);
             image.onerror = () => resolve(false);
             image.src = url;
         });
+        this.imageCache.set(url, request);
+        return request;
     }
 
     applyBackground(url) {
+        if (this.layer) {
+            this.layer.style.backgroundImage = `url("${url}")`;
+            this.layer.classList.remove("is-transitioning");
+            requestAnimationFrame(() => this.layer.classList.add("is-transitioning"));
+            return;
+        }
         this.desktop.style.backgroundImage = `url("${url}"), linear-gradient(135deg,#07070d,#0f1725,#14143d)`;
         this.desktop.style.backgroundSize = "cover";
         this.desktop.style.backgroundPosition = "center";

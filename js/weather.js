@@ -1,0 +1,36 @@
+(() => {
+    "use strict";
+    const CACHE_KEY = "tulip.weather.cache.v1", CITY_KEY = "tulip.weather.city";
+    const code = value => ({ 0: ["☀️", "Clear sky"], 1: ["🌤️", "Mostly clear"], 2: ["⛅", "Partly cloudy"], 3: ["☁️", "Overcast"], 45: ["🌫️", "Foggy"], 51: ["🌦️", "Light drizzle"], 61: ["🌧️", "Rain"], 71: ["🌨️", "Snow"], 80: ["🌦️", "Showers"], 95: ["⛈️", "Thunderstorm"] }[value] || ["🌡️", "Weather"]);
+    const fmt = (date, options) => new Intl.DateTimeFormat(undefined, options).format(new Date(date));
+    class WeatherService {
+        constructor() { this.data = null; this.timer = 0; }
+        cache() { try { return JSON.parse(localStorage.getItem(CACHE_KEY) || "null"); } catch { return null; } }
+        async locate() { return new Promise((resolve, reject) => navigator.geolocation?.getCurrentPosition(p => resolve({ latitude: p.coords.latitude, longitude: p.coords.longitude }), reject, { enableHighAccuracy: false, timeout: 7000, maximumAge: 600000 }) || reject(new Error("Location is unavailable"))); }
+        async search(city) { const result = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`); if (!result.ok) throw new Error("City search failed"); const place = (await result.json()).results?.[0]; if (!place) throw new Error("City not found"); return place; }
+        async refresh({ city, force = false } = {}) {
+            let place;
+            const cached = this.cache();
+            if (!force && cached && Date.now() - cached.savedAt < 10 * 60_000 && (!city || cached.place.name === city)) { this.data = cached; this.broadcast(); return cached; }
+            try { place = city ? await this.search(city) : await this.locate(); }
+            catch (error) { if (cached) { this.data = cached; this.broadcast(); return cached; } throw error; }
+            const query = new URLSearchParams({ latitude: place.latitude, longitude: place.longitude, current: "temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m", hourly: "temperature_2m,weather_code", daily: "weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset", timezone: "auto", forecast_days: "7" });
+            const response = await fetch(`https://api.open-meteo.com/v1/forecast?${query}`); if (!response.ok) throw new Error("Weather service is unavailable");
+            const payload = await response.json();
+            let air = null; try { const aq = await fetch(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${place.latitude}&longitude=${place.longitude}&current=us_aqi`); air = aq.ok ? (await aq.json()).current?.us_aqi : null; } catch { /* Forecast remains useful offline/without AQ. */ }
+            this.data = { place: { name: place.name || "Current location", country: place.country || "" }, payload, air, savedAt: Date.now() };
+            try { localStorage.setItem(CACHE_KEY, JSON.stringify(this.data)); if (city) localStorage.setItem(CITY_KEY, city); } catch { /* Cache is best effort. */ }
+            this.broadcast(); return this.data;
+        }
+        broadcast() { window.dispatchEvent(new CustomEvent("tulip:weatherchange", { detail: this.data })); }
+        start() { this.refresh({ city: localStorage.getItem(CITY_KEY) || undefined }).catch(() => {}); this.timer = window.setInterval(() => this.refresh({ city: localStorage.getItem(CITY_KEY) || undefined, force: true }).catch(() => {}), 30 * 60_000); }
+    }
+    class WeatherApp {
+        constructor(windowManager, notifications, service) { this.windowManager = windowManager; this.notifications = notifications; this.service = service; }
+        open() { this.record = this.windowManager.create({ appId: "weather", title: "☀️ Weather", className: "weather-window", content: this.view(), onMount: record => this.bind(record), onClose: () => window.removeEventListener("tulip:weatherchange", this.listener) }); }
+        view() { const root = document.createElement("div"); root.className = "weather-app"; root.innerHTML = '<form class="weather-search"><input aria-label="Search city" placeholder="Search a city"><button>Search</button><button type="button" data-location>My location</button></form><div data-weather-content class="weather-loading">Loading forecast…</div>'; return root; }
+        bind(record) { const root = record.content.querySelector(".weather-app"); root.querySelector("form").addEventListener("submit", async event => { event.preventDefault(); const city = root.querySelector("input").value.trim(); if (!city) return; try { await this.service.refresh({ city, force: true }); } catch (error) { this.notifications.show(error.message, "error"); } }); root.querySelector("[data-location]").addEventListener("click", () => this.service.refresh({ force: true }).catch(error => this.notifications.show(error.message, "error"))); this.listener = () => this.render(root); window.addEventListener("tulip:weatherchange", this.listener); this.render(root); }
+        render(root) { const data = this.service.data || this.service.cache(); const holder = root.querySelector("[data-weather-content]"); if (!data) return; const { payload, place, air } = data, current = payload.current, [icon, label] = code(current.weather_code); const hourly = payload.hourly.time.slice(0, 12).map((time, i) => `<div><b>${fmt(time, { hour: "numeric" })}</b><span>${code(payload.hourly.weather_code[i])[0]}</span><small>${Math.round(payload.hourly.temperature_2m[i])}°</small></div>`).join(""); const days = payload.daily.time.map((time, i) => `<div><span>${fmt(time, { weekday: "short" })}</span><b>${code(payload.daily.weather_code[i])[0]}</b><small>${Math.round(payload.daily.temperature_2m_max[i])}° / ${Math.round(payload.daily.temperature_2m_min[i])}°</small></div>`).join(""); holder.innerHTML = `<section class="weather-now"><div class="weather-place"><small>${place.country}</small><h2>${place.name}</h2><span>${label}</span></div><div class="weather-temperature"><b>${icon}</b><strong>${Math.round(current.temperature_2m)}°</strong><small>Feels ${Math.round(current.apparent_temperature)}°</small></div></section><section class="weather-metrics"><div>💧 <b>${current.relative_humidity_2m}%</b><small>Humidity</small></div><div>💨 <b>${Math.round(current.wind_speed_10m)} km/h</b><small>Wind</small></div><div>🌬️ <b>${air ?? "—"}</b><small>US AQI</small></div><div>🌅 <b>${fmt(payload.daily.sunrise[0], { hour: "numeric", minute: "2-digit" })}</b><small>Sunrise</small></div><div>🌇 <b>${fmt(payload.daily.sunset[0], { hour: "numeric", minute: "2-digit" })}</b><small>Sunset</small></div></section><h3>Hourly forecast</h3><section class="weather-hours">${hourly}</section><h3>7-day forecast</h3><section class="weather-days">${days}</section>`; }
+    }
+    window.WeatherService = WeatherService; window.WeatherApp = WeatherApp; window.TulipWeatherCode = code;
+})();
