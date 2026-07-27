@@ -46,6 +46,7 @@ window.PackageManager = class PackageManager {
     async install(manifest, { confirmPermissions } = {}) {
         const validation = this.validateManifest(manifest);
         if (!validation.valid) throw new Error(validation.error);
+        if (!this.hasEntry(manifest)) throw new Error("The package is missing its entry file.");
         const installed = await this.getPackage(manifest.id);
         if (installed) return this.update(manifest);
         if (confirmPermissions && !(await confirmPermissions(manifest))) return false;
@@ -122,7 +123,7 @@ window.PackageManager = class PackageManager {
     }
 
     async hydrate() {
-        for (const pkg of await this.getInstalledList()) this.registerShortcut(pkg);
+        for (const pkg of await this.getInstalledList()) if (this.hasEntry(pkg)) this.registerShortcut(pkg);
     }
 
     async ensureInstalled(manifests) {
@@ -130,7 +131,7 @@ window.PackageManager = class PackageManager {
         for (const manifest of manifests) {
             if (installed.has(manifest.id)) continue;
             await this.savePackage({ ...manifest, installedVersion: manifest.version, installedAt: Date.now(), builtIn: true, pinned: false });
-            this.registerShortcut(manifest);
+            if (this.hasEntry(manifest)) this.registerShortcut(manifest);
         }
     }
 
@@ -138,6 +139,11 @@ window.PackageManager = class PackageManager {
         this.apps[manifest.id] = { name: manifest.name, icon: manifest.icon || "📦", package: true };
         this.desktop.render();
         this.taskbar.refreshApps();
+    }
+
+    hasEntry(manifest) {
+        const entry = manifest?.entry;
+        return Boolean(typeof entry === "string" && entry.trim() && ((typeof manifest.code === "string" && manifest.code.trim()) || (typeof manifest.files?.[entry] === "string" && manifest.files[entry].trim())));
     }
 
     savePackage(pkg) {

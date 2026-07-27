@@ -22,6 +22,7 @@
         isSupported,
         isImage,
         isMedia,
+        sourceFor,
         async createThumbnail(file) {
             if (!isImage(file)) return null;
             const key = `${file.path}:${file.created || ""}:${file.content?.length || 0}`;

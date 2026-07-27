@@ -11,11 +11,14 @@
         "task-manager": { name: "Task Manager", icon: "▦" },
         "tulip-store": { name: "Tulip Store", icon: "🛍️" },
         weather: { name: "Weather", icon: "☀️" },
-        "flappy-bird": { name: "Flappy Tulip", icon: "🐦" }
+        "flappy-bird": { name: "Flappy Tulip", icon: "🐦" },
+        camera: { name: "Camera", icon: "📷" },
+        clock: { name: "Clock", icon: "🕰️" },
+        "media-player": { name: "Media Player", icon: "🎵" }
     };
 
     const requiredModules = [
-        "TulipFS", "Notifications", "WallpaperController", "WeatherService", "WeatherApp", "SoundManager", "FlappyBirdApp", "LockScreen", "Taskbar", "WindowManager",
+        "TulipFS", "Notifications", "WallpaperController", "WeatherService", "WeatherApp", "SoundManager", "FlappyBirdApp", "CameraApp", "ClockApp", "MediaPlayerApp", "LockScreen", "Taskbar", "WindowManager",
         "DesktopController", "PackageManager", "TulipAppRegistry", "BrowserApp", "PaintApp", "CalculatorApp", "NotepadApp",
         "TerminalApp", "TaskManagerApp", "SettingsApp", "TulipStoreApp", "FileExplorerApp", "MediaViewerApp"
     ];
@@ -85,7 +88,10 @@
             settings: new window.SettingsApp(windowManager, wallpaper, desktopController, settingsServices),
             "tulip-store": new window.TulipStoreApp(windowManager, notifications, packageManager),
             weather: new window.WeatherApp(windowManager, notifications, weatherService),
-            "flappy-bird": new window.FlappyBirdApp(windowManager, notifications, sounds)
+            "flappy-bird": new window.FlappyBirdApp(windowManager, notifications, sounds),
+            camera: new window.CameraApp(windowManager, notifications),
+            clock: new window.ClockApp(windowManager, notifications),
+            "media-player": new window.MediaPlayerApp(windowManager, notifications)
         };
         window.__tulipMediaViewer = applicationInstances["media-viewer"];
 

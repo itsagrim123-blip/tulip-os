@@ -78,6 +78,10 @@
                 return;
             }
             if (window.TulipMedia?.isSupported(file)) {
+                if (window.TulipMedia?.isMedia(file) && window.__tulipLauncher) {
+                    window.__tulipLauncher.open("media-player", file);
+                    return;
+                }
                 const viewer = window.__tulipMediaViewer;
                 if (viewer) await viewer.open(file);
                 else this.notifications.show("Media Viewer is unavailable", "error");
