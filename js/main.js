@@ -28,6 +28,7 @@
         "storage-manager": { name: "Storage Manager", icon: "💾" },
         "display-settings": { name: "Display Settings", icon: "🖥️" },
         "pdf-viewer": { name: "PDF Viewer", icon: "📄" },
+        "rooftop-runner": { name: "Rooftop Runner", icon: "🏃" },
         "wallpaper-manager": { name: "Wallpaper Manager", icon: "🖼️" },
         "update-center": { name: "Update Center", icon: "⬆️" }
     };
@@ -35,7 +36,7 @@
     const requiredModules = [
         "TulipFS", "Notifications", "WallpaperController", "WeatherService", "WeatherApp", "SoundManager", "FlappyBirdApp", "CameraApp", "ClockApp", "MediaPlayerApp", "LockScreen", "Taskbar", "WindowManager",
         "DesktopController", "PackageManager", "TulipAppRegistry", "BrowserApp", "PaintApp", "CalculatorApp", "NotepadApp",
-        "TerminalApp", "TaskManagerApp", "SettingsApp", "TulipStoreApp", "FileExplorerApp", "MediaViewerApp", "CalendarApp", "StorageManagerApp", "DisplaySettingsApp", "PDFViewerApp", "WallpaperManagerApp", "UpdateCenterApp"
+        "TerminalApp", "TaskManagerApp", "SettingsApp", "TulipStoreApp", "FileExplorerApp", "MediaViewerApp", "CalendarApp", "StorageManagerApp", "DisplaySettingsApp", "PDFViewerApp", "WallpaperManagerApp", "UpdateCenterApp", "RooftopRunnerApp"
     ];
 
     async function initializeFileSystem() {
@@ -123,6 +124,7 @@
             "storage-manager": new window.StorageManagerApp(windowManager, notifications),
             "display-settings": new window.DisplaySettingsApp(windowManager, wallpaper, notifications),
             "pdf-viewer": new window.PDFViewerApp(windowManager, notifications),
+            "rooftop-runner": new window.RooftopRunnerApp(windowManager, notifications, sounds),
             "wallpaper-manager": new window.WallpaperManagerApp(windowManager, wallpaper, notifications),
             "update-center": new window.UpdateCenterApp(windowManager, notifications)
         };
@@ -175,7 +177,8 @@
         packageManager.appRegistry = appRegistry;
         [
             { id: "update-center", name: "Update Center", icon: "⬆️", version: "1.0.0", entry: "bootstrap.js", permissions: [] },
-            { id: "wallpaper-manager", name: "Wallpaper Manager", icon: "🖼️", version: "1.0.0", entry: "bootstrap.js", permissions: [] }
+            { id: "wallpaper-manager", name: "Wallpaper Manager", icon: "🖼️", version: "1.0.0", entry: "bootstrap.js", permissions: [] },
+            { id: "rooftop-runner", name: "Rooftop Runner", icon: "🏃", version: "1.0.0", entry: "bootstrap.js", permissions: ["filesystem", "notifications"] }
         ].forEach(manifest => {
             const packageEntry = {
                 ...manifest,
