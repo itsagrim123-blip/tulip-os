@@ -20,6 +20,9 @@ window.DesktopController = class DesktopController {
         window.addEventListener("pointerup", event => this.endPointer(event));
         iconsRoot.addEventListener("click", event => this.openFromClick(event));
         desktop.addEventListener("contextmenu", event => this.showMenu(event));
+        desktop.addEventListener("dblclick", event => {
+            if (!event.target.closest(".window, #taskbar, #start-menu, .desktop-icon, .weather-widget")) this.onWallpaper?.();
+        });
         menu.addEventListener("click", event => this.handleMenu(event));
         document.addEventListener("pointerdown", event => { if (!menu.contains(event.target)) menu.hidden = true; });
         document.addEventListener("mousemove", event => this.handleFileDragMove(event));

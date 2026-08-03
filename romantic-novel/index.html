@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#fff7e8"><title>Tanvi Verma's Tulip Garden</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&family=DM+Sans:wght@400;500&family=Playfair+Display:ital,wght@0,500;0,600;1,500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="atmosphere" aria-hidden="true"></canvas><div class="vignette" aria-hidden="true"></div><div class="grain" aria-hidden="true"></div>
+  <section class="scene landing active" id="landing" aria-label="A tulip field at dawn">
+    <div class="sun"></div><div class="fog fog-one"></div><div class="fog fog-two"></div><div class="rays"></div><div class="horizon hills"></div><div class="field field-back"></div><div class="field field-front"></div>
+    <div class="intro-copy"><p id="lineOne">Every flower has a story.</p><p id="lineTwo">Mine begins with you.</p></div>
+    <button class="lone-tulip focus-tulip" id="welcomeTulip" aria-label="Walk toward the glowing tulip"><span class="stem"></span><span class="leaf left"></span><span class="leaf right"></span><span class="bloom"><i></i><i></i><i></i><i></i><b></b></span></button><p class="gesture" id="walkHint">Follow the glowing tulip</p>
+  </section>
+  <section class="scene garden" id="garden" aria-label="Memory garden" hidden>
+    <div class="garden-sky"></div><div class="garden-haze"></div><div class="garden-field"></div><div class="path"></div>
+    <header class="garden-heading"><p>Our little world</p><h1>Pick a memory<br><em>and let it bloom.</em></h1></header><div class="memory-map" id="memoryMap"></div>
+    <button class="white-tulip" id="secretTulip" aria-label="A small white tulip"><span></span></button>
+    <button class="tree-stop chapter-stop" data-stop="letter" aria-label="Visit the old tree"><span class="tree-canopy"></span><span class="tree-trunk"></span><span class="bench"></span><small>The old tree</small></button>
+    <button class="sunset-stop chapter-stop" data-stop="ending" aria-label="Walk to the last light"><span>✦</span><small>Follow the last light</small></button>
+    <div class="map-controls"><button id="backToField" aria-label="Return to the opening field">←</button><span>Follow the garden path</span></div>
+  </section>
+  <section class="scene letter-scene" id="letterScene" aria-label="A letter beneath the old tree" hidden><div class="tree-world"><div class="big-tree"><i></i><i></i><i></i><b></b></div><button id="benchButton" class="bench-button" aria-label="Sit at the bench"><span></span><small>There is something for you on the bench</small></button></div><button class="scene-back" data-back="garden">← Garden</button></section>
+  <section class="scene ending-scene" id="endingScene" aria-label="The tulip garden at night" hidden><div class="ending-sun"></div><div class="ending-field"></div><div class="ending-copy"><p id="endOne">You will always be my favorite flower.</p><p id="endTwo">Happy Girlfriend's Day ❤️</p></div></section>
+  <div class="modal memory-modal" id="memoryModal" role="dialog" aria-modal="true" aria-labelledby="memoryTitle" hidden><button class="close-modal" aria-label="Close">×</button><div class="modal-flower">✿</div><p class="memory-date" id="memoryDate"></p><h2 id="memoryTitle"></h2><div class="memory-photo"><img id="memoryImage" alt="Memory photo" loading="lazy"></div><p id="memoryText"></p></div>
+  <div class="modal letter-modal" id="letterModal" role="dialog" aria-modal="true" aria-labelledby="letterTitle" hidden><button class="close-modal" aria-label="Close letter">×</button><div class="paper"><p class="letter-date">August 1, 2026</p><h2 id="letterTitle">My dearest Tanvi Verma,</h2><p id="letterBody">{{LOVE_LETTER}}</p><p class="signoff">Always,<br>{{YOUR_NAME}}</p></div></div>
+  <div class="modal secret-modal" id="secretModal" role="dialog" aria-modal="true" hidden><button class="close-modal" aria-label="Close">×</button><span>❀</span><p>If you've found this,<br>thank you for reading my heart.</p></div>
+  <div id="fade" aria-hidden="true"></div><div class="sound-dock"><button id="mute" aria-label="Mute ambience" aria-pressed="false">♫</button><input id="volume" aria-label="Ambience volume" type="range" min="0" max="1" step=".05" value=".35"></div>
+  <audio id="piano" loop preload="metadata"><source src="assets/music/pal%20pal%20dil.webm" type="audio/webm"></audio><script src="script.js"></script>
+</body>
+</html>

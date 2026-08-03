@@ -64,6 +64,13 @@
         window.__tulipDiagnostics = new window.TulipDiagnostics(kernel.eventBus);
         apps.archive = { name: "Archive Manager", icon: "🗜" };
         const notifications = new window.Notifications();
+        const reportRuntimeError = event => {
+            const message = event.detail?.message || event.detail?.error?.message || "An application error occurred.";
+            notifications.show(message, "error");
+        };
+        window.addEventListener("tulip:runtimeerror", reportRuntimeError);
+        window.addEventListener("tulip:windowerror", reportRuntimeError);
+        window.addEventListener("tulip:booterror", reportRuntimeError);
         const sounds = new window.SoundManager();
         window.__tulipSounds = sounds;
         document.addEventListener("pointerdown", () => sounds.unlock().catch(() => {}), { once: true, passive: true });

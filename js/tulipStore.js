@@ -113,7 +113,7 @@ window.TulipStoreApp = class TulipStoreApp {
         card.querySelector("h4").textContent = app.name;
         card.querySelector("p").textContent = app.category;
         const badge = card.querySelector(".store-badge");
-        if (update || installed) { badge.hidden = false; badge.textContent = update ? "Update" : "Installed"; badge.classList.toggle("is-update", update); }
+        if (update || installed || !this.packageManager.isCatalogInstallable(app)) { badge.hidden = false; badge.textContent = update ? "Update" : installed ? "Installed" : "Coming soon"; badge.classList.toggle("is-update", update); }
         return card;
     }
 
@@ -131,6 +131,7 @@ window.TulipStoreApp = class TulipStoreApp {
         const button = document.createElement("button"); button.type = "button";
         if (update) { button.dataset.action = "update"; button.textContent = "Update"; }
         else if (installed) { button.dataset.action = "uninstall"; button.textContent = "Uninstall"; button.className = "secondary"; }
+        else if (!this.packageManager.isCatalogInstallable(app)) { button.disabled = true; button.textContent = "Coming soon"; }
         else { button.dataset.action = "install"; button.textContent = "Install"; }
         actions.append(button);
         return panel;

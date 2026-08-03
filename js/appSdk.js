@@ -1,5 +1,5 @@
 (function () {
-    const PERMISSIONS = ["filesystem", "notifications", "clipboard", "settings", "wallpaper", "terminal"];
+    const PERMISSIONS = ["filesystem", "notifications", "clipboard", "settings", "wallpaper", "terminal", "window", "storage"];
     const LOG_KEY = "tulip.sdk.logs";
     const PERMISSION_KEY = "tulip.sdk.permissions";
     const DEV_KEY = "tulip.developerMode";
@@ -92,6 +92,7 @@
                 windowManager: Object.freeze({ create: options => { const record = registry.windowManager.create({ ...options, appId: `${manifest.id}:${Date.now()}`, singleton: false }); this.records.push(record); return Object.freeze({ close: () => record.close(), minimize: () => record.minimize(), restore: () => record.restore(), focus: () => record.focus() }); } }),
                 dialogs: Object.freeze({ alert: message => window.alert(String(message)), confirm: message => Promise.resolve(window.confirm(String(message))) }),
                 settings: Object.freeze({ get: key => { requirePermission("settings"); return localStorage.getItem(`tulip.${key}`); }, set: (key, value) => { requirePermission("settings"); localStorage.setItem(`tulip.${key}`, String(value)); } }),
+                storage: Object.freeze({ get: key => { requirePermission("storage"); return localStorage.getItem(`tulip.${manifest.id}.${key}`); }, set: (key, value) => { requirePermission("storage"); localStorage.setItem(`tulip.${manifest.id}.${key}`, String(value)); }, remove: key => { requirePermission("storage"); localStorage.removeItem(`tulip.${manifest.id}.${key}`); } }),
                 clipboard: Object.freeze({ read: async () => { requirePermission("clipboard"); return navigator.clipboard?.readText() || ""; }, write: async value => { requirePermission("clipboard"); return navigator.clipboard?.writeText(String(value)); } }),
                 theme: Object.freeze({ get: () => document.body.classList.contains("tulip-light") ? "light" : "dark" }),
                 wallpaper: Object.freeze({ get: () => { requirePermission("wallpaper"); return localStorage.getItem("tulip.wallpaper") || ""; } }),

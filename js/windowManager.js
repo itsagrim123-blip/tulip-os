@@ -76,6 +76,8 @@
             this.activeWindow = null;
             this.drag = null;
             this.resize = null;
+            this.pendingPointer = null;
+            this.interactionFrame = 0;
             this.hooks = new Map();
             this.sessionFactories = new Map();
             this.zIndex = new ZIndexManager(20);
@@ -88,10 +90,12 @@
 
         bindEvents() {
             this.container.addEventListener("pointerdown", event => this.handlePointerDown(event));
+            this.container.addEventListener("dblclick", event => this.handleDoubleClick(event));
             this.container.addEventListener("click", event => this.handleClick(event));
             this.container.addEventListener("keydown", event => this.handleKeyDown(event));
             window.addEventListener("pointermove", event => this.handlePointerMove(event));
-            window.addEventListener("pointerup", () => this.finishInteraction());
+            window.addEventListener("pointerup", event => this.finishInteraction(event));
+            window.addEventListener("pointercancel", event => this.finishInteraction(event));
             window.addEventListener("resize", () => { this.refreshMonitors(); this.keepWindowsVisible(); });
             window.addEventListener("beforeunload", () => this.saveSession());
         }
@@ -171,23 +175,38 @@
             this.focus(record);
             const direction = event.target.closest("[data-resize-direction]")?.dataset.resizeDirection;
             if (direction && record.options.resizable !== false && !record.maximized && !record.fullscreen) {
-                this.resize = { record, direction, startX: event.clientX, startY: event.clientY, bounds: this.getBounds(record) };
+                this.resize = { record, direction, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, bounds: this.getBounds(record) };
+                this.capturePointer(element, event.pointerId);
                 event.preventDefault();
                 return;
             }
             const handle = event.target.closest("[data-window-drag-handle]");
-            if (!handle || event.target.closest("button") || record.options.draggable === false || record.maximized || record.fullscreen) return;
+            if (!handle || event.target.closest("button, input, textarea, select, a, [data-no-window-drag]") || record.options.draggable === false || record.fullscreen) return;
+            if (record.maximized) this.restoreForDrag(record, event.clientX, event.clientY);
             const bounds = element.getBoundingClientRect();
-            this.drag = { record, offsetX: event.clientX - bounds.left, offsetY: event.clientY - bounds.top };
+            this.drag = { record, pointerId: event.pointerId, offsetX: event.clientX - bounds.left, offsetY: event.clientY - bounds.top, moved: false };
+            this.capturePointer(element, event.pointerId);
             element.classList.add("is-dragging");
             event.preventDefault();
         }
 
         handlePointerMove(event) {
+            if ((this.drag && event.pointerId !== this.drag.pointerId) || (this.resize && event.pointerId !== this.resize.pointerId)) return;
+            if (!this.drag && !this.resize) return;
+            this.pendingPointer = { clientX: event.clientX, clientY: event.clientY };
+            if (!this.interactionFrame) this.interactionFrame = requestAnimationFrame(() => this.flushInteraction());
+        }
+
+        flushInteraction() {
+            this.interactionFrame = 0;
+            const pointer = this.pendingPointer;
+            this.pendingPointer = null;
+            if (!pointer) return;
             if (this.drag) {
                 const { record, offsetX, offsetY } = this.drag;
-                this.moveTo(record, event.clientX - offsetX, event.clientY - offsetY);
-            } else if (this.resize) this.resizeWindow(this.resize, event.clientX, event.clientY);
+                this.drag.moved = true;
+                this.moveTo(record, pointer.clientX - offsetX, pointer.clientY - offsetY, false);
+            } else if (this.resize) this.resizeWindow(this.resize, pointer.clientX, pointer.clientY);
         }
 
         resizeWindow(interaction, clientX, clientY) {
@@ -202,10 +221,15 @@
             const minHeight = Math.max(DEFAULTS.minHeight, Number(record.options.minHeight) || DEFAULTS.minHeight);
             if (width < minWidth) { if (direction.includes("w")) left -= minWidth - width; width = minWidth; }
             if (height < minHeight) { if (direction.includes("n")) top -= minHeight - height; height = minHeight; }
+            const area = this.workArea(record.monitorId);
+            left = Math.max(area.left, Math.min(left, area.left + area.width - minWidth));
+            top = Math.max(area.top, Math.min(top, area.top + area.height - minHeight));
+            width = Math.min(width, area.left + area.width - left);
+            height = Math.min(height, area.top + area.height - top);
             this.resizeTo(record, { left, top, width, height }, false);
         }
 
-        moveTo(record, left, top) {
+        moveTo(record, left, top, persist = true) {
             const area = this.workArea(record.monitorId);
             const bounds = this.getBounds(record);
             const maxLeft = area.left + Math.max(0, area.width - bounds.width);
@@ -213,13 +237,52 @@
             record.element.style.left = `${Math.round(Math.max(area.left, Math.min(left, maxLeft)))}px`;
             record.element.style.top = `${Math.round(Math.max(area.top, Math.min(top, maxTop)))}px`;
             record.snapped = null;
-            this.emit("moved", record);
+            if (persist) { this.emit("moved", record); this.scheduleSave(); }
+        }
+
+        finishInteraction(event) {
+            if (event && this.drag && event.pointerId !== this.drag.pointerId) return;
+            if (event && this.resize && event.pointerId !== this.resize.pointerId) return;
+            if (this.interactionFrame) { cancelAnimationFrame(this.interactionFrame); this.interactionFrame = 0; this.flushInteraction(); }
+            const drag = this.drag;
+            if (drag) {
+                drag.record.element.classList.remove("is-dragging");
+                this.releasePointer(drag.record.element, drag.pointerId);
+                if (drag.moved && event) this.snapFromPointer(drag.record, event.clientX, event.clientY);
+                this.emit("moved", drag.record);
+            }
+            if (this.resize) this.releasePointer(this.resize.record.element, this.resize.pointerId);
+            this.drag = null; this.resize = null; this.pendingPointer = null;
             this.scheduleSave();
         }
 
-        finishInteraction() {
-            if (this.drag) this.drag.record.element.classList.remove("is-dragging");
-            this.drag = null; this.resize = null;
+        capturePointer(element, pointerId) { try { element.setPointerCapture?.(pointerId); } catch { /* Pointer capture is an optional enhancement. */ } }
+        releasePointer(element, pointerId) { try { if (element.hasPointerCapture?.(pointerId)) element.releasePointerCapture(pointerId); } catch { /* The pointer may already be released. */ } }
+
+        handleDoubleClick(event) {
+            const title = event.target.closest("[data-window-drag-handle]");
+            if (!title || event.target.closest("button, input, textarea, select, a")) return;
+            const record = this.recordsById.get(title.closest(".window")?.dataset.windowId);
+            if (record && record.options.resizable !== false) this.maximize(record);
+        }
+
+        restoreForDrag(record, clientX, clientY) {
+            const previous = record.restoreBounds || { left: 32, top: 32, width: 560, height: 360 };
+            record.maximized = false;
+            record.element.classList.remove("is-maximized");
+            const area = this.workArea(record.monitorId);
+            const width = Math.min(previous.width, area.width);
+            const ratio = Math.min(0.9, Math.max(0.1, clientX / Math.max(1, area.width)));
+            this.resizeTo(record, { left: area.left + clientX - width * ratio, top: area.top + 8, width, height: Math.min(previous.height, area.height) }, false);
+            this.moveTo(record, this.getBounds(record).left, this.getBounds(record).top, false);
+        }
+
+        snapFromPointer(record, clientX, clientY) {
+            const area = this.workArea(record.monitorId);
+            const edge = Math.min(32, Math.max(16, Math.round(area.width * 0.035)));
+            if (clientX <= area.left + edge) this.snap(record, "left");
+            else if (clientX >= area.left + area.width - edge) this.snap(record, "right");
+            else if (clientY <= area.top + 12) this.maximize(record);
         }
 
         handleClick(event) {
