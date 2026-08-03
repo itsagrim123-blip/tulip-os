@@ -1,0 +1,10 @@
+.tulip-panel, .settings-card, .update-card, .update-info-card, .storage-card, .calendar-card, .weather-card, .wallpaper-manager-card, .pdf-card {
+    border: 1px solid var(--tulip-border);
+    border-radius: var(--tulip-radius-md);
+    background: var(--tulip-surface);
+    box-shadow: 0 10px 30px rgba(3, 6, 20, .12), inset 0 1px rgba(255,255,255,.06);
+    backdrop-filter: blur(var(--tulip-blur)) saturate(145%);
+    -webkit-backdrop-filter: blur(var(--tulip-blur)) saturate(145%);
+}
+.tulip-panel:hover, .settings-card:hover, .update-card:hover, .wallpaper-manager-card:hover { border-color: rgba(var(--tulip-accent-rgb), .42); }
+.settings-eyebrow { color: var(--tulip-accent); font-weight: 800; letter-spacing: .13em; }

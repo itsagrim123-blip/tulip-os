@@ -1,0 +1,7 @@
+html { color-scheme: dark; }
+body { background: #090b15; color: var(--tulip-text); }
+body::selection { background: rgba(var(--tulip-accent-rgb), .42); color: #fff; }
+body.tulip-light { color-scheme: light; --tulip-text: #182033; --tulip-muted: #596278; --tulip-surface: rgba(249, 250, 255, .74); --tulip-surface-strong: rgba(255, 255, 255, .9); --tulip-surface-soft: rgba(31, 41, 71, .065); --tulip-border: rgba(43, 52, 84, .14); --tulip-shadow: 0 22px 60px rgba(30, 41, 70, .16); }
+body.tulip-light #desktop::before { background: linear-gradient(180deg, rgba(255,255,255,.17), rgba(22, 30, 55, .08)); }
+@media (prefers-color-scheme: light) { body.tulip-auto { color-scheme: light; } }
+@media (prefers-contrast: more) { :root { --tulip-border: currentColor; --tulip-surface: rgba(10, 12, 20, .96); } }

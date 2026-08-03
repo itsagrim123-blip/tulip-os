@@ -96,7 +96,7 @@
         const windowManager = new window.WindowManager(byId("windows"), taskbar);
         const desktopController = new window.DesktopController({
             iconsRoot: byId("desktop-icons"), desktop, menu: byId("desktopMenu"), apps,
-            onLaunch: appId => launcher.open(appId), onWallpaper: () => wallpaper.choose(), onLock: () => lockScreen.lock()
+            onLaunch: appId => launcher.open(appId), onWallpaper: () => wallpaper.choose(), onLock: () => lockScreen.lock(), notifications
         });
         const packageManager = new window.PackageManager({ apps, desktop: desktopController, taskbar, notifications });
         const appRegistryApps = { ...apps };

@@ -1,0 +1,5 @@
+.icon-image, .update-brand-mark, .settings-brand > span, .about-hero > span {
+    background: linear-gradient(145deg, rgba(var(--tulip-accent-rgb), .26), rgba(255,255,255,.08));
+    border: 1px solid rgba(255,255,255,.12);
+}
+.taskbar-app { font-variant-emoji: text; }

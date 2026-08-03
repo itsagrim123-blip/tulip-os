@@ -1,0 +1,2 @@
+.wallpaper-picker, .sdk-permission-overlay { background: rgba(5, 7, 18, .5); backdrop-filter: blur(14px) saturate(130%); -webkit-backdrop-filter: blur(14px) saturate(130%); }
+.wallpaper-picker section, .sdk-permission-dialog { border: 1px solid var(--tulip-border); border-radius: var(--tulip-radius-lg); background: var(--tulip-surface-strong); box-shadow: var(--tulip-shadow); }

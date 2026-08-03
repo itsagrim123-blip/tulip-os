@@ -34,9 +34,16 @@ window.SettingsApp = class SettingsApp {
     applyPreferences() {
         this.applyTheme();
         document.documentElement.style.setProperty("--tulip-accent", this.preferences.accent);
+        document.documentElement.style.setProperty("--tulip-accent-rgb", this.hexToRgb(this.preferences.accent));
         document.body.dataset.iconSize = this.preferences.iconSize;
         document.body.classList.toggle("taskbar-top", this.preferences.taskbarPosition === "top");
         document.body.classList.toggle("animations-disabled", !this.preferences.animations);
+    }
+
+    hexToRgb(value) {
+        const color = String(value || "").replace("#", "");
+        if (!/^[\da-f]{6}$/i.test(color)) return "167, 139, 250";
+        return [0, 2, 4].map(index => Number.parseInt(color.slice(index, index + 2), 16)).join(", ");
     }
 
     applyTheme() {

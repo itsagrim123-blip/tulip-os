@@ -1,11 +1,12 @@
 ﻿const STORAGE_KEY = "tulip.desktopLayout";
 
 window.DesktopController = class DesktopController {
-    constructor({ iconsRoot, desktop, menu, apps, onLaunch, onWallpaper, onLock }) {
+    constructor({ iconsRoot, desktop, menu, apps, onLaunch, onWallpaper, onLock, notifications }) {
         this.iconsRoot = iconsRoot;
         this.desktop = desktop;
         this.menu = menu;
         this.apps = apps;
+        this.notifications = notifications;
         this.onLaunch = onLaunch;
         this.drag = null;
         this.suppressClick = false;
@@ -127,10 +128,12 @@ window.DesktopController = class DesktopController {
         const deleteBtn = menu.querySelector("#deleteBtn");
         const openBtn = menu.querySelector("#openBtn");
         const openWithBtn = menu.querySelector("#openWithBtn");
+        const copyBtn = menu.querySelector("#copyBtn");
         if (renameBtn) renameBtn.style.display = file ? "block" : "none";
         if (deleteBtn) deleteBtn.style.display = file ? "block" : "none";
         if (openBtn) openBtn.style.display = "none";
         if (openWithBtn) openWithBtn.style.display = "none";
+        if (copyBtn) copyBtn.style.display = file ? "block" : "none";
 
         const currentPath = "/Desktop";
         menu.querySelector("#newFolderBtn").onclick = async () => {
@@ -141,13 +144,24 @@ window.DesktopController = class DesktopController {
             menu.style.display = "none";
             await this.createInlineEntry({ targetPath: currentPath, type: "file", initialName: "New File.txt", x: event.pageX, y: event.pageY });
         };
-        menu.querySelector("#pasteBtn").onclick = () => {
+        menu.querySelector("#copyBtn").onclick = () => {
+            if (!file) return;
+            window.TulipFileClipboard?.copy([file]);
             menu.style.display = "none";
+            this.notifications?.show(`${file.path.split("/").pop()} copied`);
+        };
+        menu.querySelector("#pasteBtn").onclick = async () => {
+            menu.style.display = "none";
+            const copied = await window.TulipFileClipboard?.paste(currentPath, (path, name) => this.getAvailablePath(path, name));
+            if (copied) {
+                await this.loadDesktop();
+                this.notifications?.show(`${copied} item${copied === 1 ? "" : "s"} pasted`);
+            } else this.notifications?.show("Copy a file or folder before pasting.", "error");
         };
         menu.querySelector("#refreshBtn").onclick = async () => {
             menu.style.display = "none";
             await this.loadDesktop();
-        };
+};
         menu.querySelector("#propertiesBtn").onclick = () => {
             menu.style.display = "none";
             alert("Properties are not available yet.");
@@ -340,3 +354,20 @@ window.DesktopController = class DesktopController {
         this.menu.hidden = true;
     }
 }
+
+window.TulipFileClipboard = {
+    entries: [],
+    copy(entries) {
+        this.entries = entries.filter(entry => entry?.path).map(entry => ({ path: entry.path, name: entry.path.split("/").pop() }));
+        return this.entries.length;
+    },
+    async paste(targetPath, getAvailablePath) {
+        if (!this.entries.length || !window.TulipFS?.copy) return 0;
+        let copied = 0;
+        for (const entry of this.entries) {
+            const destination = await getAvailablePath(targetPath, entry.name);
+            if (await window.TulipFS.copy(entry.path, destination)) copied += 1;
+        }
+        return copied;
+    }
+};

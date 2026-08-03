@@ -1,0 +1,5 @@
+.settings-sidebar, .update-sidebar, .explorer-sidebar, .browser-sidebar {
+    border-right: 1px solid var(--tulip-border);
+    background: linear-gradient(180deg, rgba(255,255,255,.075), transparent);
+}
+.settings-sidebar nav button { border-radius: var(--tulip-radius-sm); }

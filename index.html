@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tulip OS</title>
+    <link rel="stylesheet" href="css/variables.css?v=20260803-design-system">
     <link rel="stylesheet" href="css/desktop.css">
     <link rel="stylesheet" href="css/taskbar.css">
     <link rel="stylesheet" href="css/windows.css">
@@ -24,6 +25,15 @@
     <link rel="stylesheet" href="css/flappy.css">
     <link rel="stylesheet" href="css/apps-extra.css">
     <link rel="stylesheet" href="css/app-ui.css?v=20260803-update-history">
+    <link rel="stylesheet" href="css/theme.css?v=20260803-design-system">
+    <link rel="stylesheet" href="css/components.css?v=20260803-design-system">
+    <link rel="stylesheet" href="css/buttons.css?v=20260803-design-system">
+    <link rel="stylesheet" href="css/cards.css?v=20260803-design-system">
+    <link rel="stylesheet" href="css/inputs.css?v=20260803-design-system">
+    <link rel="stylesheet" href="css/sidebar.css?v=20260803-design-system">
+    <link rel="stylesheet" href="css/dialogs.css?v=20260803-design-system">
+    <link rel="stylesheet" href="css/icons.css?v=20260803-design-system">
+    <link rel="stylesheet" href="css/utilities.css?v=20260803-design-system">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 </head>
@@ -40,6 +50,7 @@
             <div id="newFolderBtn">📁 New Folder</div>
             <div id="newFileBtn">📄 New File</div>
             <hr>
+            <div id="copyBtn">⧉ Copy</div>
             <div id="pasteBtn">📋 Paste</div>
             <div id="refreshBtn">🔄 Refresh</div>
             <div id="propertiesBtn">⚙ Properties</div>
@@ -53,7 +64,6 @@
         <div id="wallpaper-layer" aria-hidden="true"></div>
         <div id="wallpaper-overlay"></div>
         <div id="desktop-icons"></div>
-        <button type="button" id="desktop-weather" class="weather-widget" aria-label="Open Weather"><span data-weather-icon>☀️</span><span><strong data-weather-temp>--°</strong><small data-weather-place>Weather</small></span></button>
         <div id="windows"></div>
 
         <div id="desktopMenu" hidden>

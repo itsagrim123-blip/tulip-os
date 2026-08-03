@@ -1,0 +1,20 @@
+:root {
+    --tulip-accent: #a78bfa;
+    --tulip-accent-strong: #7c5cff;
+    --tulip-accent-rgb: 167, 139, 250;
+    --tulip-success: #4ade80;
+    --tulip-warning: #fbbf24;
+    --tulip-danger: #fb7185;
+    --tulip-text: #f7f7ff;
+    --tulip-muted: #aeb4cc;
+    --tulip-surface: rgba(19, 23, 41, .72);
+    --tulip-surface-strong: rgba(25, 29, 50, .88);
+    --tulip-surface-soft: rgba(255, 255, 255, .075);
+    --tulip-border: rgba(255, 255, 255, .14);
+    --tulip-shadow: 0 24px 70px rgba(3, 6, 20, .36);
+    --tulip-radius-sm: 10px;
+    --tulip-radius-md: 16px;
+    --tulip-radius-lg: 22px;
+    --tulip-blur: 28px;
+    --tulip-ease: cubic-bezier(.2, .8, .2, 1);
+}

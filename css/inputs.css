@@ -1,0 +1,9 @@
+input, select, textarea {
+    border: 1px solid var(--tulip-border);
+    border-radius: var(--tulip-radius-sm);
+    background: var(--tulip-surface-soft);
+    color: var(--tulip-text);
+    accent-color: var(--tulip-accent-strong);
+}
+input::placeholder, textarea::placeholder { color: var(--tulip-muted); opacity: .8; }
+input:focus, select:focus, textarea:focus { border-color: var(--tulip-accent); box-shadow: 0 0 0 3px rgba(var(--tulip-accent-rgb), .18); }

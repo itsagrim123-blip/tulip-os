@@ -115,11 +115,13 @@
             const single = selected.length === 1 ? selected[0] : null;
             const show = (id, visible) => { const control = menu.querySelector(id); if (control) control.style.display = visible ? "block" : "none"; };
             show("#openBtn", Boolean(single)); show("#openWithBtn", Boolean(single)); show("#renameBtn", Boolean(single)); show("#deleteBtn", selected.length > 0);
-            show("#newFolderBtn", true); show("#newFileBtn", true); show("#pasteBtn", true); show("#refreshBtn", true); show("#propertiesBtn", true);
+            show("#newFolderBtn", true); show("#newFileBtn", true); show("#copyBtn", selected.length > 0); show("#pasteBtn", true); show("#refreshBtn", true); show("#propertiesBtn", true);
             menu.querySelector("#openBtn").onclick = async () => { menu.style.display = "none"; if (single) await this.openFile(single); };
             menu.querySelector("#openWithBtn").onclick = async () => { menu.style.display = "none"; if (single) await this.openFile(single, true); };
             menu.querySelector("#newFolderBtn").onclick = async () => { menu.style.display = "none"; await this.createInlineEntry({ targetPath: this.currentPath, type: "folder", initialName: "New Folder", x: event.pageX, y: event.pageY }); };
             menu.querySelector("#newFileBtn").onclick = async () => { menu.style.display = "none"; await this.createInlineEntry({ targetPath: this.currentPath, type: "file", initialName: "New File.txt", x: event.pageX, y: event.pageY }); };
+            menu.querySelector("#copyBtn").onclick = () => { if (!selected.length) return; window.TulipFileClipboard?.copy(selected); menu.style.display = "none"; this.notifications.show(`${selected.length} item${selected.length === 1 ? "" : "s"} copied`); };
+            menu.querySelector("#pasteBtn").onclick = async () => { menu.style.display = "none"; const copied = await window.TulipFileClipboard?.paste(this.currentPath, (path, name) => this.getAvailablePath(path, name)); if (copied) { await this.loadFolder(this.currentPath); this.notifications.show(`${copied} item${copied === 1 ? "" : "s"} pasted`); } else this.notifications.show("Copy a file or folder before pasting.", "error"); };
             menu.querySelector("#refreshBtn").onclick = async () => { menu.style.display = "none"; await this.loadFolder(this.currentPath); };
             menu.querySelector("#propertiesBtn").onclick = () => { menu.style.display = "none"; this.showProperties(selected); };
             menu.querySelector("#renameBtn").onclick = async () => { if (!single) return; const next = await window.TulipPrompt("Rename", single.path.split("/").pop()); if (!next) return; await window.TulipFS.rename(single.path, `${single.path.substring(0, single.path.lastIndexOf("/"))}/${next}`.replace(/\/+/, "/")); menu.style.display = "none"; await this.loadFolder(this.currentPath); };

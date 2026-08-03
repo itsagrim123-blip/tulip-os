@@ -1,0 +1,7 @@
+button, .toolbar-btn, .settings-primary, .update-action-btn, .update-toggle {
+    border-radius: var(--tulip-radius-sm);
+    transition: transform 160ms var(--tulip-ease), background 160ms var(--tulip-ease), border-color 160ms var(--tulip-ease), box-shadow 160ms var(--tulip-ease);
+}
+button:not(:disabled):hover, .toolbar-btn:hover, .settings-primary:hover { transform: translateY(-1px); }
+button:disabled { cursor: not-allowed; opacity: .5; }
+button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--tulip-accent); outline-offset: 2px; }

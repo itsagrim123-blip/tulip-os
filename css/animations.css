@@ -1,1 +1,8 @@
-@keyframes float{50%{transform:translateY(-12px)}}@keyframes pop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+@keyframes float{50%{transform:translateY(-12px)}}
+@keyframes pop{from{opacity:0;transform:scale(.94)}to{opacity:1;transform:scale(1)}}
+@keyframes tulip-fade-up{from{opacity:0;transform:translateY(10px);filter:blur(3px)}to{opacity:1;transform:translateY(0);filter:blur(0)}}
+@keyframes tulip-ripple{to{transform:scale(1.9);opacity:0}}
+.window, #start-menu, .toast { animation: tulip-fade-up 260ms var(--tulip-ease, ease) both; }
+.desktop-icon:active, .taskbar-app:active, .start-app:active { transform: scale(.96); }
+.animations-disabled *, .animations-disabled *::before, .animations-disabled *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; transition-duration: .01ms !important; } }

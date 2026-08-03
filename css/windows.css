@@ -2,3 +2,16 @@
 @media (max-width:700px){.window{width:calc(100vw - 16px);height:calc(100dvh - 88px);min-width:0;left:8px!important;top:8px!important;border-radius:18px}.window-title{height:52px;flex-basis:52px;padding:0 14px;cursor:default}.window-buttons{gap:10px}.window-buttons button{width:28px;height:28px}.window-resize-handle{display:none}.window-content{padding:16px}.window.is-maximized{height:calc(100dvh - 72px)!important}.browser-window{height:calc(100dvh - 88px)}}
 
 .window{will-change:left,top,width,height}.window-title{user-select:none;touch-action:none}.window-title:active{cursor:grabbing}.window-resize-handle{touch-action:none}
+
+/* Tulip Design System window shell */
+.window { border-color: var(--tulip-border); border-radius: var(--tulip-radius-md); background: var(--tulip-surface-strong); box-shadow: var(--tulip-shadow), inset 0 1px rgba(255,255,255,.08); backdrop-filter: blur(var(--tulip-blur)) saturate(150%); -webkit-backdrop-filter: blur(var(--tulip-blur)) saturate(150%); }
+.window.is-focused { border-color: rgba(var(--tulip-accent-rgb), .68); box-shadow: 0 28px 78px rgba(3, 6, 20, .48), 0 0 0 1px rgba(var(--tulip-accent-rgb), .16), inset 0 1px rgba(255,255,255,.09); }
+.window-title { background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.025)); border-bottom: 1px solid rgba(255,255,255,.06); }
+.window-buttons { gap: 6px; }
+.window-buttons button { width: 28px; height: 28px; border-radius: 9px; background: transparent !important; position: relative; }
+.window-buttons button::after { display: grid; place-items: center; width: 100%; height: 100%; color: var(--tulip-text); font-size: 15px; line-height: 1; }
+.window-buttons [data-window-action=minimize]::after { content: "−"; }
+.window-buttons [data-window-action=maximize]::after { content: "□"; }
+.window-buttons [data-window-action=close]::after { content: "×"; }
+.window-buttons button:hover { background: rgba(255,255,255,.12) !important; transform: none; }
+.window-buttons [data-window-action=close]:hover { background: var(--tulip-danger) !important; }

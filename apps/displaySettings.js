@@ -159,6 +159,7 @@
         savePreferences() {
             localStorage.setItem("tulip.displaySettings", JSON.stringify(this.preferences));
             document.documentElement.style.setProperty("--tulip-accent", this.preferences.accent);
+            document.documentElement.style.setProperty("--tulip-accent-rgb", this.hexToRgb(this.preferences.accent));
             document.documentElement.style.setProperty("--tulip-transparency", `${this.preferences.transparency}%`);
             document.documentElement.style.setProperty("--tulip-blur", `${this.preferences.blur}px`);
             document.documentElement.style.fontSize = `${this.preferences.fontSize}px`;
@@ -173,6 +174,12 @@
             }
             document.body.classList.toggle("animations-disabled", !this.preferences.animations);
             this.notifications?.show("Display settings updated", "success");
+        }
+
+        hexToRgb(value) {
+            const color = String(value || "").replace("#", "");
+            if (!/^[\da-f]{6}$/i.test(color)) return "167, 139, 250";
+            return [0, 2, 4].map(index => Number.parseInt(color.slice(index, index + 2), 16)).join(", ");
         }
 
         updatePreference(key, value, root) {

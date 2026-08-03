@@ -1,0 +1,5 @@
+.wallpaper-manager-list-item, .file-card, .weather-widget, .update-card, .settings-card, .store-app-card {
+    border-radius: var(--tulip-radius-md);
+    transition: transform 180ms var(--tulip-ease), border-color 180ms var(--tulip-ease), box-shadow 180ms var(--tulip-ease);
+}
+.wallpaper-manager-list-item:hover, .file-card:hover, .store-app-card:hover { transform: translateY(-2px); box-shadow: var(--tulip-shadow); }
