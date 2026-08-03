@@ -77,6 +77,10 @@
                 window.__tulipLauncher?.open("archive", file.path);
                 return;
             }
+            if (file.path?.toLowerCase().endsWith(".pdf")) {
+                window.__tulipLauncher?.open("pdf-viewer", file);
+                return;
+            }
             if (window.TulipMedia?.isSupported(file)) {
                 if (window.TulipMedia?.isMedia(file) && window.__tulipLauncher) {
                     window.__tulipLauncher.open("media-player", file);

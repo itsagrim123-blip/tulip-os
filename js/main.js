@@ -23,13 +23,19 @@
         "flappy-bird": { name: "Flappy Tulip", icon: "🐦" },
         camera: { name: "Camera", icon: "📷" },
         clock: { name: "Clock", icon: "🕰️" },
-        "media-player": { name: "Media Player", icon: "🎵" }
+        "media-player": { name: "Media Player", icon: "🎵" },
+        calendar: { name: "Calendar", icon: "🗓️" },
+        "storage-manager": { name: "Storage Manager", icon: "💾" },
+        "display-settings": { name: "Display Settings", icon: "🖥️" },
+        "pdf-viewer": { name: "PDF Viewer", icon: "📄" },
+        "wallpaper-manager": { name: "Wallpaper Manager", icon: "🖼️" },
+        "update-center": { name: "Update Center", icon: "⬆️" }
     };
 
     const requiredModules = [
         "TulipFS", "Notifications", "WallpaperController", "WeatherService", "WeatherApp", "SoundManager", "FlappyBirdApp", "CameraApp", "ClockApp", "MediaPlayerApp", "LockScreen", "Taskbar", "WindowManager",
         "DesktopController", "PackageManager", "TulipAppRegistry", "BrowserApp", "PaintApp", "CalculatorApp", "NotepadApp",
-        "TerminalApp", "TaskManagerApp", "SettingsApp", "TulipStoreApp", "FileExplorerApp", "MediaViewerApp"
+        "TerminalApp", "TaskManagerApp", "SettingsApp", "TulipStoreApp", "FileExplorerApp", "MediaViewerApp", "CalendarApp", "StorageManagerApp", "DisplaySettingsApp", "PDFViewerApp", "WallpaperManagerApp", "UpdateCenterApp"
     ];
 
     async function initializeFileSystem() {
@@ -45,6 +51,7 @@
         await createIfMissing("/Pictures", "folder");
         await createIfMissing("/Pictures/Camera", "folder");
         await createIfMissing("/Pictures/Wallpapers", "folder");
+        await createIfMissing("/Documents/Calendar", "folder");
         await createIfMissing("/AppData", "folder");
         await createIfMissing("/Recycle Bin", "folder");
         await createIfMissing("/Desktop/Projects", "folder");
@@ -92,6 +99,7 @@
             onLaunch: appId => launcher.open(appId), onWallpaper: () => wallpaper.choose(), onLock: () => lockScreen.lock()
         });
         const packageManager = new window.PackageManager({ apps, desktop: desktopController, taskbar, notifications });
+        const appRegistryApps = { ...apps };
 
         // Settings is created only after its complete service bundle exists.
         const settingsServices = { apps, notifications, packageManager, users };
@@ -110,7 +118,13 @@
             "flappy-bird": new window.FlappyBirdApp(windowManager, notifications, sounds),
             camera: new window.CameraApp(windowManager, notifications),
             clock: new window.ClockApp(windowManager, notifications),
-            "media-player": new window.MediaPlayerApp(windowManager, notifications)
+            "media-player": new window.MediaPlayerApp(windowManager, notifications),
+            calendar: new window.CalendarApp(windowManager, notifications),
+            "storage-manager": new window.StorageManagerApp(windowManager, notifications),
+            "display-settings": new window.DisplaySettingsApp(windowManager, wallpaper, notifications),
+            "pdf-viewer": new window.PDFViewerApp(windowManager, notifications),
+            "wallpaper-manager": new window.WallpaperManagerApp(windowManager, wallpaper, notifications),
+            "update-center": new window.UpdateCenterApp(windowManager, notifications)
         };
         window.__tulipMediaViewer = applicationInstances["media-viewer"];
 
@@ -152,17 +166,34 @@
             if (event.detail.action === "opened") sounds.play("window-open");
             if (event.detail.action === "closed") sounds.play("window-close");
         });
-        const appRegistry = new window.TulipAppRegistry({ apps, packageManager, notifications, windowManager, launcher });
+        const appRegistry = new window.TulipAppRegistry({ apps: appRegistryApps, packageManager, notifications, windowManager, launcher });
         window.__tulipAppRegistry = appRegistry;
         window.TulipSDK = Object.freeze({ version: "1.0.0", permissions: [...window.TulipSDK.permissions], forApp: (id, argument) => appRegistry.getSDK(id, argument) });
         window.__tulipInstaller = new window.TulipTappInstaller(packageManager, notifications);
         settingsServices.appRegistry = appRegistry;
+        applicationInstances.settings.appRegistry = appRegistry;
         packageManager.appRegistry = appRegistry;
+        [
+            { id: "update-center", name: "Update Center", icon: "⬆️", version: "1.0.0", entry: "bootstrap.js", permissions: [] },
+            { id: "wallpaper-manager", name: "Wallpaper Manager", icon: "🖼️", version: "1.0.0", entry: "bootstrap.js", permissions: [] }
+        ].forEach(manifest => {
+            const packageEntry = {
+                ...manifest,
+                files: {
+                    [manifest.entry]: `window.__tulipLauncher?.open(${JSON.stringify(manifest.id)});`
+                },
+                code: `window.__tulipLauncher?.open(${JSON.stringify(manifest.id)});`
+            };
+            appRegistryApps[manifest.id] = { name: manifest.name, icon: manifest.icon, package: true, manifest: packageEntry };
+            packageManager.registerShortcut(packageEntry);
+        });
         const nativeOpen = launcher.open;
         launcher.open = (appId, argument) => {
+            if (applicationInstances[appId]) return nativeOpen(appId, argument);
             if (apps[appId]?.package) return appRegistry.launch(appId, argument).catch(error => notifications.show(error.message || "Unable to launch application", "error"));
             return nativeOpen(appId, argument);
         };
+        window.__tulipLauncher = launcher;
         window.addEventListener("tulip:userchange", async () => { await desktopController.loadDesktop(); wallpaper.restore(); });
 
         const clock = byId("clock");

@@ -1,0 +1,119 @@
+{
+  "current": {
+    "version": "Pre-Alpha 0.9",
+    "buildNumber": "9000",
+    "channel": "Pre-Alpha",
+    "installedDate": "2026-08-03",
+    "status": "Up to date"
+  },
+  "updates": [
+    {
+      "version": "Pre-Alpha 0.1",
+      "buildNumber": "1000",
+      "releaseDate": "2026-01-12",
+      "updateType": "Feature update",
+      "title": "Initial Development",
+      "changelog": ["Introduced the first Tulip OS desktop foundation."],
+      "newFeatures": ["Desktop Environment", "Window System", "Taskbar", "Start Menu", "File Explorer", "Settings", "Notification System", "App SDK", "Package Manager", "Virtual Filesystem", "Permission Manager", "Desktop Icons", "Context Menus"],
+      "improvements": [],
+      "bugFixes": [],
+      "categories": ["UI", "Apps", "Security"]
+    },
+    {
+      "version": "Pre-Alpha 0.2",
+      "buildNumber": "2000",
+      "releaseDate": "2026-02-09",
+      "updateType": "Experience update",
+      "title": "Desktop Experience Update",
+      "changelog": ["Refined daily desktop interactions and visual presentation."],
+      "newFeatures": ["Wallpaper Engine", "Android Compatibility"],
+      "improvements": ["Improved Window Manager", "Better Taskbar", "Better Settings", "Improved Notifications", "Theme Improvements", "Window Animations", "Performance Improvements", "Better UI"],
+      "bugFixes": [],
+      "categories": ["UI", "Performance"]
+    },
+    {
+      "version": "Pre-Alpha 0.3",
+      "buildNumber": "3000",
+      "releaseDate": "2026-03-16",
+      "updateType": "Core update",
+      "title": "Core System Upgrade",
+      "changelog": ["Expanded the core system services behind the desktop."],
+      "newFeatures": ["Process Manager", "Service Manager", "Security Center"],
+      "improvements": ["Better Package Manager", "Better FileSystem", "Performance Optimizations", "Improved Error Handling", "Better Startup", "Better Window Rendering"],
+      "bugFixes": [],
+      "categories": ["Security", "Performance", "Apps"]
+    },
+    {
+      "version": "Pre-Alpha 0.4",
+      "buildNumber": "4000",
+      "releaseDate": "2026-04-13",
+      "updateType": "Stability update",
+      "title": "System Stability Update",
+      "changelog": ["Strengthened core window behavior and runtime reliability."],
+      "newFeatures": [],
+      "improvements": ["Better touch support", "Better active window handling", "Better z-index management", "Better notifications"],
+      "bugFixes": ["Fixed window dragging", "Fixed resizing", "Fixed snapping", "Fixed maximize", "Fixed minimize", "Fixed runtime errors"],
+      "categories": ["Bug Fixes", "UI"]
+    },
+    {
+      "version": "Pre-Alpha 0.5",
+      "buildNumber": "5000",
+      "releaseDate": "2026-05-11",
+      "updateType": "Personalization update",
+      "title": "Desktop Personalization",
+      "changelog": ["Made wallpaper customization more capable and reliable."],
+      "newFeatures": ["Android wallpaper support"],
+      "improvements": ["Improved Wallpaper Engine", "Wallpaper persistence", "Faster wallpaper loading", "Better wallpaper transitions", "Wallpaper optimization", "Better personalization"],
+      "bugFixes": [],
+      "categories": ["UI", "Performance"]
+    },
+    {
+      "version": "Pre-Alpha 0.6",
+      "buildNumber": "6000",
+      "releaseDate": "2026-06-08",
+      "updateType": "Applications update",
+      "title": "Applications Update",
+      "changelog": ["Expanded Tulip OS with productive and playful built-in applications."],
+      "newFeatures": ["Weather Application", "Browser", "Calendar", "Storage Manager", "Display Settings", "PDF Viewer", "Flappy Tulip"],
+      "improvements": ["Better App Registration", "Better Package Validation"],
+      "bugFixes": [],
+      "categories": ["Apps", "Games"]
+    },
+    {
+      "version": "Pre-Alpha 0.7",
+      "buildNumber": "7000",
+      "releaseDate": "2026-06-29",
+      "updateType": "Performance update",
+      "title": "Performance Update",
+      "changelog": ["Improved responsiveness across desktop and Android environments."],
+      "newFeatures": [],
+      "improvements": ["Faster startup", "Memory optimization", "CPU optimization", "Better rendering", "Better caching", "Better lazy loading", "Faster animations", "Android optimization", "Better touch responsiveness"],
+      "bugFixes": [],
+      "categories": ["Performance", "UI"]
+    },
+    {
+      "version": "Pre-Alpha 0.8",
+      "buildNumber": "8000",
+      "releaseDate": "2026-07-20",
+      "updateType": "Design update",
+      "title": "Modern UI Update",
+      "changelog": ["Modernized the desktop visual system."],
+      "newFeatures": ["Glassmorphism", "Acrylic Blur", "Rounded Windows"],
+      "improvements": ["Better Shadows", "Better Buttons", "Better Cards", "Better Icons", "Responsive UI", "Smooth Animations", "Better Typography"],
+      "bugFixes": [],
+      "categories": ["UI"]
+    },
+    {
+      "version": "Pre-Alpha 0.9",
+      "buildNumber": "9000",
+      "releaseDate": "2026-08-03",
+      "updateType": "Major feature update",
+      "title": "Major Feature Update",
+      "changelog": ["Delivered the Wallpaper Manager and a data-driven Update Center."],
+      "newFeatures": ["New Wallpaper Manager application", "Custom Wallpaper Upload", "Wallpaper Gallery", "Wallpaper Favorites", "Wallpaper Slideshow", "Drag & Drop Upload", "Animated Wallpapers", "Update Center"],
+      "improvements": ["Better Browser", "Better Weather", "Better Flappy Tulip", "Better Package Validation", "Better Runtime Error Handling", "Better GitHub Pages Compatibility", "Better Vercel Compatibility", "Overall Stability Improvements"],
+      "bugFixes": ["General Bug Fixes"],
+      "categories": ["New Features", "Apps", "UI", "Games", "Performance", "Bug Fixes"]
+    }
+  ]
+}
