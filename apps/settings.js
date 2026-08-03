@@ -8,6 +8,7 @@ window.SettingsApp = class SettingsApp {
         this.packageManager = services.packageManager;
         this.users = services.users;
         this.appRegistry = services.appRegistry;
+        this.pendingWallpaper = null;
         this.preferenceKey = "tulip.settings";
         this.preferences = this.loadPreferences();
         this.applyPreferences();
@@ -64,7 +65,7 @@ window.SettingsApp = class SettingsApp {
         root.innerHTML = `
             <aside class="settings-sidebar"><div class="settings-brand"><span>🌷</span><div><strong>Tulip Settings</strong><small>Personalize your workspace</small></div></div><nav><button type="button" class="active" data-section="appearance">Appearance</button><button type="button" data-section="wallpaper">Wallpaper</button><button type="button" data-section="personalization">Personalization</button><button type="button" data-section="system">System</button><button type="button" data-section="notifications">Notifications</button><button type="button" data-section="about">About</button></nav></aside>
             <main class="settings-main"><section class="settings-section active" data-panel="appearance"><p class="settings-eyebrow">LOOK AND FEEL</p><h2>Appearance</h2><p class="settings-intro">Choose how Tulip OS looks across your desktop.</p><div class="settings-card"><h3>Theme</h3><div class="choice-grid" data-role="themes"><button type="button" data-theme="light">☀ Light</button><button type="button" data-theme="dark">◐ Dark</button><button type="button" data-theme="auto">◑ Auto</button></div></div><div class="settings-card settings-row"><div><h3>Accent color</h3><p>Used for controls and highlights.</p></div><label class="accent-picker"><input type="color" data-role="accent" aria-label="Accent color"><span data-role="accent-value"></span></label></div></section>
-            <section class="settings-section" data-panel="wallpaper"><p class="settings-eyebrow">DESKTOP</p><h2>Wallpaper</h2><p class="settings-intro">Select a wallpaper to apply it immediately.</p><div class="wallpaper-grid" data-role="wallpapers"></div></section>
+            <section class="settings-section" data-panel="wallpaper"><p class="settings-eyebrow">DESKTOP</p><h2>Wallpaper</h2><p class="settings-intro">Select a wallpaper to apply it immediately or upload your own.</p><div class="settings-card wallpaper-upload-card"><div class="wallpaper-actions"><button type="button" class="settings-primary" data-action="upload-wallpaper">➕ Upload Wallpaper</button><span>JPG, JPEG, PNG, WEBP, GIF · up to 20MB</span></div><input type="file" accept="image/jpeg,image/png,image/webp,image/gif,.jpg,.jpeg,.png,.webp,.gif" hidden data-role="wallpaper-file"><div class="wallpaper-preview-card" data-role="wallpaper-preview" hidden><div class="wallpaper-preview-image"><img alt="Wallpaper preview" data-role="wallpaper-preview-image" loading="lazy" decoding="async"></div><div class="wallpaper-preview-details"><h3 data-role="wallpaper-preview-name">No image selected</h3><p data-role="wallpaper-preview-meta">Choose an image to preview it.</p><div class="wallpaper-preview-actions"><button type="button" class="settings-primary" data-action="apply-preview">Apply</button><button type="button" class="settings-primary" data-action="cancel-preview">Cancel</button><button type="button" class="settings-primary" data-action="remove-selected-wallpaper">Remove</button></div></div></div></div><div class="wallpaper-gallery-stack"><div class="wallpaper-group"><h3>Default Wallpapers</h3><div class="wallpaper-grid" data-role="default-wallpapers"></div></div><div class="wallpaper-group"><h3>Uploaded Wallpapers</h3><div class="wallpaper-grid" data-role="uploaded-wallpapers"></div></div></div></section>
             <section class="settings-section" data-panel="personalization"><p class="settings-eyebrow">WORKSPACE</p><h2>Personalization</h2><div class="settings-card"><h3>Desktop icon size</h3><div class="choice-grid compact" data-role="icon-size"><button type="button" data-icon-size="small">Small</button><button type="button" data-icon-size="medium">Medium</button><button type="button" data-icon-size="large">Large</button></div></div><div class="settings-card"><h3>Taskbar position</h3><div class="choice-grid compact" data-role="taskbar-position"><button type="button" data-taskbar-position="bottom">Bottom</button><button type="button" data-taskbar-position="top">Top</button></div></div><label class="settings-card toggle-row"><span><h3>Window animations</h3><p>Use smooth transitions throughout Tulip OS.</p></span><input type="checkbox" data-role="animations"><i></i></label></section>
             <section class="settings-section" data-panel="system"><p class="settings-eyebrow">DEVICE</p><h2>System</h2><p class="settings-intro">A quick overview of this Tulip OS session.</p><dl class="system-list" data-role="system-info"><div><dt>Tulip OS version</dt><dd>9.0.0</dd></div><div><dt>Storage usage</dt><dd>Calculating…</dd></div><div><dt>Installed applications</dt><dd>Calculating…</dd></div><div><dt>Memory information</dt><dd>Calculating…</dd></div><div><dt>Browser</dt><dd>Calculating…</dd></div></dl></section>
             <section class="settings-section" data-panel="notifications"><p class="settings-eyebrow">ALERTS</p><h2>Notifications</h2><div class="settings-card toggle-row"><span><h3>Enable notifications</h3><p>Show Tulip OS messages in this browser.</p></span><input type="checkbox" data-role="notifications"><i></i></label><div class="settings-card"><h3>Test notification</h3><p>Confirm that desktop messages are working.</p><button type="button" class="settings-primary" data-action="test-notification">Send test notification</button></div></section>
@@ -96,6 +97,7 @@ window.SettingsApp = class SettingsApp {
             if (event.target.matches("[data-role=animations]")) this.updatePreference("animations", event.target.checked, root);
             if (event.target.matches("[data-role=notifications]")) localStorage.setItem("tulip.notifications", String(event.target.checked));
             if (event.target.matches("[data-role=developer-mode]")) { this.appRegistry?.setDeveloperMode(event.target.checked); this.notifications.show(`Developer Mode ${event.target.checked ? "enabled" : "disabled"}`); }
+            if (event.target.matches("[data-role=wallpaper-file]")) this.handleWallpaperUpload(event, root);
         });
         record.wallpaperListener = () => this.renderWallpapers(root);
         window.addEventListener("tulip:wallpaperchange", record.wallpaperListener);
@@ -114,6 +116,13 @@ window.SettingsApp = class SettingsApp {
         if (iconSize) return this.updatePreference("iconSize", iconSize.dataset.iconSize, root);
         const taskbar = event.target.closest("[data-taskbar-position]");
         if (taskbar) return this.updatePreference("taskbarPosition", taskbar.dataset.taskbarPosition, root);
+        if (event.target.closest("[data-action=upload-wallpaper]")) { root.querySelector("[data-role=wallpaper-file]").click(); return; }
+        if (event.target.closest("[data-action=apply-preview]")) { await this.applyPendingWallpaper(root); return; }
+        if (event.target.closest("[data-action=cancel-preview]")) { this.pendingWallpaper = null; this.renderWallpaperPreview(root); return; }
+        if (event.target.closest("[data-action=remove-selected-wallpaper]")) { await this.removeActiveWallpaper(root); return; }
+        if (event.target.closest("[data-action=apply-wallpaper]")) { const action = event.target.closest("[data-action=apply-wallpaper]"); await this.selectWallpaper(action.dataset.wallpaperId, root); return; }
+        if (event.target.closest("[data-action=rename-wallpaper]")) { const action = event.target.closest("[data-action=rename-wallpaper]"); await this.renameWallpaper(action.dataset.wallpaperId, root); return; }
+        if (event.target.closest("[data-action=delete-wallpaper]")) { const action = event.target.closest("[data-action=delete-wallpaper]"); await this.deleteWallpaper(action.dataset.wallpaperId, root); return; }
         const wallpaper = event.target.closest("[data-wallpaper]");
         if (wallpaper) { await this.selectWallpaper(wallpaper.dataset.wallpaper, root); return; }
         if (event.target.closest("[data-action=test-notification]")) {
@@ -174,15 +183,124 @@ window.SettingsApp = class SettingsApp {
         root.querySelector("[data-role=notifications]").checked = localStorage.getItem("tulip.notifications") !== "false";
     }
 
-    renderWallpapers(root) {
-        const selected = this.wallpaper.getSavedWallpaper().id;
-        root.querySelector("[data-role=wallpapers]").replaceChildren(...window.TULIP_WALLPAPERS.map(wallpaper => {
+    async renderWallpapers(root) {
+        await this.wallpaper.ensureCustomWallpapersLoaded?.();
+        const selected = this.wallpaper.getSavedWallpaper();
+        const defaultGrid = root.querySelector("[data-role=default-wallpapers]");
+        const uploadedGrid = root.querySelector("[data-role=uploaded-wallpapers]");
+        if (!defaultGrid || !uploadedGrid) return;
+        const createCard = wallpaper => {
+            const card = document.createElement("div");
+            card.className = "wallpaper-option-card";
             const button = document.createElement("button");
-            button.type = "button"; button.className = "wallpaper-option"; button.dataset.wallpaper = wallpaper.url;
-            button.classList.toggle("selected", wallpaper.id === selected);
-            button.innerHTML = `<img alt="${wallpaper.name} wallpaper" src="${wallpaper.url}"><span>${wallpaper.name}</span>`;
-            return button;
-        }));
+            button.type = "button"; button.className = "wallpaper-option"; button.dataset.wallpaper = wallpaper.id;
+            button.classList.toggle("selected", wallpaper.id === selected.id);
+            button.innerHTML = `<img alt="${wallpaper.name} wallpaper" src="${wallpaper.url}" loading="lazy" decoding="async"><span>${wallpaper.name}</span>`;
+            card.append(button);
+            if (wallpaper.isCustom) {
+                const actions = document.createElement("div");
+                actions.className = "wallpaper-option-actions";
+                const apply = document.createElement("button"); apply.type = "button"; apply.className = "wallpaper-action"; apply.dataset.action = "apply-wallpaper"; apply.dataset.wallpaperId = wallpaper.id; apply.textContent = "Apply";
+                const rename = document.createElement("button"); rename.type = "button"; rename.className = "wallpaper-action"; rename.dataset.action = "rename-wallpaper"; rename.dataset.wallpaperId = wallpaper.id; rename.textContent = "Rename";
+                const remove = document.createElement("button"); remove.type = "button"; remove.className = "wallpaper-action"; remove.dataset.action = "delete-wallpaper"; remove.dataset.wallpaperId = wallpaper.id; remove.textContent = "Delete";
+                actions.append(apply, rename, remove);
+                card.append(actions);
+            }
+            return card;
+        };
+        defaultGrid.replaceChildren(...window.TULIP_WALLPAPERS.map(createCard));
+        const customWallpapers = this.wallpaper.getCustomWallpapers?.() || [];
+        uploadedGrid.replaceChildren(...(customWallpapers.length ? customWallpapers.map(createCard) : [this.createEmptyWallpaperNotice()]));
+        this.renderWallpaperPreview(root);
+    }
+
+    createEmptyWallpaperNotice() {
+        const notice = document.createElement("div");
+        notice.className = "wallpaper-empty-state";
+        notice.innerHTML = "<p>No uploaded wallpapers yet.</p>";
+        return notice;
+    }
+
+    renderWallpaperPreview(root) {
+        const preview = root.querySelector("[data-role=wallpaper-preview]");
+        const image = root.querySelector("[data-role=wallpaper-preview-image]");
+        const name = root.querySelector("[data-role=wallpaper-preview-name]");
+        const meta = root.querySelector("[data-role=wallpaper-preview-meta]");
+        if (!preview || !image || !name || !meta) return;
+        if (!this.pendingWallpaper) {
+            preview.hidden = true;
+            return;
+        }
+        preview.hidden = false;
+        image.src = this.pendingWallpaper.url;
+        image.alt = this.pendingWallpaper.name;
+        name.textContent = this.pendingWallpaper.name;
+        meta.textContent = `${this.pendingWallpaper.width || "?"}×${this.pendingWallpaper.height || "?"} · ${this.formatBytes(this.pendingWallpaper.size || 0)}`;
+    }
+
+    async handleWallpaperUpload(event, root) {
+        const file = event.target.files?.[0];
+        event.target.value = "";
+        if (!file) return;
+        try {
+            const preview = await this.wallpaper.createWallpaperPreview(file);
+            this.pendingWallpaper = preview;
+            this.renderWallpaperPreview(root);
+            this.notifications.show(`Preview ready: ${preview.name}`);
+        } catch (error) {
+            this.pendingWallpaper = null;
+            this.renderWallpaperPreview(root);
+            this.notifications.show(error.message || "Unable to prepare wallpaper.", "error");
+        }
+    }
+
+    async applyPendingWallpaper(root) {
+        if (!this.pendingWallpaper) return;
+        try {
+            const wallpaper = await this.wallpaper.saveWallpaperPreview(this.pendingWallpaper);
+            this.pendingWallpaper = null;
+            await this.renderWallpapers(root);
+            this.notifications.show(`${wallpaper.name} added to your wallpaper gallery`);
+        } catch (error) {
+            this.notifications.show(error.message || "Unable to save wallpaper.", "error");
+        }
+    }
+
+    async removeActiveWallpaper(root) {
+        const active = this.wallpaper.getSavedWallpaper();
+        if (!active?.isCustom) {
+            this.pendingWallpaper = null;
+            this.renderWallpaperPreview(root);
+            this.notifications.show("No uploaded wallpaper is currently active.", "error");
+            return;
+        }
+        await this.deleteWallpaper(active.id, root);
+    }
+
+    async deleteWallpaper(id, root) {
+        const deleted = await this.wallpaper.removeWallpaper(id);
+        if (!deleted) {
+            this.notifications.show("The selected wallpaper could not be removed.", "error");
+            return;
+        }
+        this.pendingWallpaper = null;
+        await this.renderWallpapers(root);
+        this.renderWallpaperPreview(root);
+        this.notifications.show("Wallpaper removed");
+    }
+
+    async renameWallpaper(id, root) {
+        const target = this.wallpaper.getCustomWallpapers?.().find(wallpaper => wallpaper.id === id);
+        if (!target) return;
+        const next = await window.TulipPrompt("Rename wallpaper", target.name || "Wallpaper");
+        if (!next) return;
+        const updated = await this.wallpaper.renameWallpaper(id, next);
+        if (!updated) {
+            this.notifications.show("The wallpaper could not be renamed.", "error");
+            return;
+        }
+        await this.renderWallpapers(root);
+        this.notifications.show(`Renamed to ${updated.name}`);
     }
 
     renderAccounts(root) {

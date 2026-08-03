@@ -44,6 +44,7 @@
         await createIfMissing("/Downloads", "folder");
         await createIfMissing("/Pictures", "folder");
         await createIfMissing("/Pictures/Camera", "folder");
+        await createIfMissing("/Pictures/Wallpapers", "folder");
         await createIfMissing("/AppData", "folder");
         await createIfMissing("/Recycle Bin", "folder");
         await createIfMissing("/Desktop/Projects", "folder");
